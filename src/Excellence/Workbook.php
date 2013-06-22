@@ -38,6 +38,7 @@
 namespace Excellence;
 
 use Excellence\Delegates\WorkbookDelegate;
+use Excellence\Sheet;
 
 /**
  * Class Workbook
@@ -59,6 +60,13 @@ class Workbook {
 	 * @var WorkbookDelegate
 	 */
 	private $oDelegate;
+
+	/**
+	 * contains dom document including sheets
+	 *
+	 * @var \DomDocument|null
+	 */
+	private $oSheets;
 
 #pragma mark - construction
 
@@ -84,10 +92,77 @@ class Workbook {
 	/**
 	 * return workbook identifier to identify a workbook. This
 	 * should be unique in an application.
+	 *
 	 * @return string
 	 */
 	public function getIdentifier() {
 		return $this->sIdentifier;
 	}
 
+#pragma mark - data handling
+
+	/**
+	 * this method will create all needed XML Documents to render with
+	 * XSLT stylesheet files.
+	 *
+	 * @throws \LogicException
+	 */
+	public function create() {
+
+		// get number of sheets from delegate
+		$iSheets = (int) $this->oDelegate->numberOfSheetsInWorkbook($this);
+
+		// make sure that there is minimum one sheet
+		if (0 >= $iSheets) {
+			throw new \LogicException('WorkbookDelegate::numberOfSheetsInWorkbook have to return an integer bigger than zero.');
+		}
+
+		// create Sheet Xml Data
+		$this->createSheetXml($iSheets);
+	}
+
+	/**
+	 * creates DomDocument for Excel sheets that would be used to create an XML
+	 * by using XSLT Stylesheet. Of course it is possible to create real OpenXML
+	 * Document, but with an XSLT it is easier to handle namespaces, format
+	 * changes and further development s of this library.
+	 *
+	 * @param int $iSheets
+	 *
+	 * @throws \LogicException
+	 */
+	private function createSheetXml($iSheets) {
+
+		$this->oSheets = new \DOMDocument('1.0', 'utf-8');
+
+		// sheets node
+		$oSheets = $this->oSheets->createElement('sheets');
+		$oSheets->setAttribute('count', $iSheets);
+
+		// add sheets node to document
+		$this->oSheets->appendChild($oSheets);
+
+		// iterate sheets
+		for($iSheet = 0; $iSheet < $iSheets; $iSheet++) {
+
+			/** @var Sheet $oSheet */
+			$oSheet = $this->oDelegate->getSheetForWorkBook($this, $iSheet);
+
+			// make sure that oSheet is instanceof sheet
+			if (!$oSheet instanceof Sheet) {
+				throw new \LogicException(sprintf('WorkbookDelegate::getSheetForWorkBook have to return an instance of \Excellence\Sheet, "%s" given.', gettype($oSheet)));
+			}
+
+			// create sheet node
+			$oXmlSheet = $this->oSheets->createElement('sheet', $oSheet->getName());
+			$oXmlSheet->setAttribute('id', $oSheet->getIdentifier());
+
+			// append sheet to sheets node
+			$oSheets->appendChild($oXmlSheet);
+		}
+
+		// unset variables
+		unset($oSheets, $oXmlSheet, $iSheet, $iSheets);
+
+	}
 }

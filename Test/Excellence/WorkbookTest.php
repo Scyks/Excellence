@@ -67,6 +67,27 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 	}
 
 
+#pragma mark - dataProvider
+
+	/**
+	 * data provider that returns values that don't match or could
+	 * type casted to positive integer values.
+	 *
+	 * @return array
+	 */
+	public function dataProviderInvalidValuesForPositiveIntegers() {
+		return array(
+			array(0),
+			array(-2),
+			array('0'),
+			array('0.9'),
+			array('-1'),
+			array('test'),
+			array(array()),
+			array(false),
+		);
+	}
+
 #pragma mark - construction
 
 	/**
@@ -126,4 +147,61 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 		$this->assertSame('workbook', $oWorkBook->getIdentifier());
 	}
 
+#pragma mark - create
+
+	/**
+	 * @test
+	 * @group Workbook
+	 * @dataProvider dataProviderInvalidValuesForPositiveIntegers
+	 * @expectedException \LogicException
+	 * @expectedExceptionMessage WorkbookDelegate::numberOfSheetsInWorkbook have to return an integer bigger than zero.
+	 */
+	public function create_DelegateReturnsWrongSheetNumber_throwsException($value) {
+		$oMock = $this->getMock('\Test\Excellence\Stub\DataSource', array('numberOfSheetsInWorkbook'));
+		$oMock
+			->expects($this->any())
+			->method('numberOfSheetsInWorkbook')
+			->will($this->returnValue($value))
+		;
+
+		$this->makeWorkbook('foo', $oMock)->create();
+	}
+
+	/**
+	 * @test
+	 * @group Workbook
+	 * @expectedException \LogicException
+	 * @expectedExceptionMessage WorkbookDelegate::getSheetForWorkBook have to return an instance of \Excellence\Sheet, "NULL" given.
+	 */
+	public function create_DelegateReturnsNoInstaceOfSheet_throwsException() {
+		$oMock = $this->getMock('\Test\Excellence\Stub\DataSource', array('getSheetForWorkBook'));
+		$oMock
+			->expects($this->any())
+			->method('getSheetForWorkBook')
+			->will($this->returnValue(null))
+		;
+
+		$this->makeWorkbook('foo', $oMock)->create();
+	}
+
+	/**
+	 * @test
+	 * @group Workbook
+	 */
+	public function create_createSheetData_ScheetXmlDataCreated() {
+		$oWorkbook = $this->makeWorkbook();
+
+		$sCompareXml = '<sheets count="2">'
+			. '<sheet id="sheet1">Sheet 1</sheet>'
+			. '<sheet id="sheet2">Sheet 2</sheet>'
+			. '</sheets>'
+		;
+
+		$oDom = new \DOMDocument('1.0', 'utf-8');
+		$oDom->loadXML($sCompareXml);
+
+		$oWorkbook->create();
+
+		$this->assertAttributeEquals($oDom, 'oSheets', $oWorkbook);
+	}
 }

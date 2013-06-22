@@ -53,7 +53,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 		return new Sheet($sIdentifier, $sName);
 	}
 
-
 #pragma mark - construction
 
 	/**

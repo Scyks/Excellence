@@ -53,6 +53,9 @@ class DataSource implements WorkbookDelegate {
 	 */
 	private $aSheets = array();
 
+	/**
+	 * constrcution - load data
+	 */
 	public function __construct() {
 		$this->aSheets[] = new Sheet('sheet1', 'Sheet 1');
 		$this->aSheets[] = new Sheet('sheet2', 'Sheet 2');
