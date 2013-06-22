@@ -30,7 +30,8 @@
 	},
 	"autoload": {
 		"psr-0": {
-			"Excellence": "src/"
+			"Excellence": "src/",
+			"Test": ""
 		}
 	}
 }

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="./Test/Bootstrap.php" colors="true" verbose="true" strict="true">
+
+    <filter>
+        <blacklist>
+            <directory suffix=".php">./Test</directory>
+            <directory suffix=".php">./vendor</directory>
+        </blacklist>
+    </filter>
+
+    <testsuites>
+        <testsuite name="Excellence Test Suite">
+            <directory>./Test/</directory>
+        </testsuite>
+    </testsuites>
+
+    <logging>
+        <log type="coverage-html" target="./testlog/report" charset="UTF-8" yui="true" highlight="true" lowUpperBound="50" highLowerBound="80" />
+        <log type="testdox-html" target="./testlog/testdox.html" />
+    </logging>
+</phpunit>
