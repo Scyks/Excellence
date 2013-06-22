@@ -1,0 +1,36 @@
+{
+	"name": "scyks/excellence",
+	"type": "library",
+	"description": "Minimal an lightweight PHP-Excel writer implementation",
+	"keywords": [
+		"excel",
+		"phpexcel",
+		"php-excel"
+	],
+	"license": "BSD-3-Clause",
+	"minimum-stability": "dev",
+	"authors": [
+		{
+			"name": "Ronald Marske",
+			"email": "scyks@ceow.de",
+			"role": "lead"
+		}
+	],
+	"support": {
+		"issues": "https://github.com/Scyks/Excellence/issues"
+	},
+	"repositories": [
+		{
+			"type": "vcs",
+			"url": "https://github.com/Scyks/Excellence"
+		}
+	],
+	"require": {
+		"php": ">=5.4.0"
+	},
+	"autoload": {
+		"psr-0": {
+			"Excellence": "src/"
+		}
+	}
+}
