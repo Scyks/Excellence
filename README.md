@@ -13,7 +13,8 @@ else, this is just creating a simple lightweight Excel file.
 
 Exel file looks like this one:
 
-|       | A                 | B  | C   | D             | .... | T             |
+| Rows  | A                 | B  | C   | D             | .... | T             |
+| ----- | ----------------- | -- | --- | ------------- | .... | ------------- |
 | 1     | test column value | 22 | 0.9 | =SUM(B1:C1)   | .... | =SUM(Q1:R1)   |
 | 2     | test column value | 22 | 0.9 | =SUM(B2:C2)   | .... | =SUM(Q2:R2)   |
 | ...   | ...               | .. | ... | ...           | .... | ...           |
