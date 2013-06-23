@@ -48,6 +48,15 @@ use \Excellence\Sheet;
  */
 class PerformanceDataSource extends DataSource implements WorkbookDelegate, DataDelegate {
 
+	function cord($iColumn, $iRow) {
+
+		for($sReturn = ""; $iColumn >= 0; $iColumn = intval($iColumn / 26) - 1) {
+			$sReturn = chr($iColumn%26 + 0x41) . $sReturn;
+		}
+
+		return $sReturn . $iRow;
+
+	}
 
 	/**
 	 * construction - load data
@@ -55,13 +64,13 @@ class PerformanceDataSource extends DataSource implements WorkbookDelegate, Data
 	public function __construct() {
 		$this->aSheets[] = new Sheet('sheet1', 'Sheet 1');
 
-		for ($iRow = 0; $iRow < 100; $iRow++) {
-			for ($iColumn = 0; $iColumn < 20; $iColumn += 4) {
+		for ($iRow = 0; $iRow < 10; $iRow++) {
+			for ($iColumn = 0; $iColumn < 10; $iColumn += 4) {
 
 				$this->aData['sheet1'][$iRow][$iColumn] = 'test column value';
 				$this->aData['sheet1'][$iRow][$iColumn+1] = 22;
 				$this->aData['sheet1'][$iRow][$iColumn+2] = 0.9;
-				$this->aData['sheet1'][$iRow][$iColumn+3] = '=SUM(' . chr(64+$iColumn+2) . ($iRow+1) . ':' . chr(64+$iColumn+3) . ($iRow+1) . ')';
+				$this->aData['sheet1'][$iRow][$iColumn+3] = '=SUM(' . $this->cord($iColumn+1, $iRow+1) . ':' . $this->cord($iColumn+2, $iRow+1) . ')';
 			}
 
 		}
