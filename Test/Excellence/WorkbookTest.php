@@ -46,7 +46,7 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 
 	public function tearDown() {
 		// try to unlink created xlsx file
-		@unlink(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'test.xlsx');
+//		@unlink(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'test.xlsx');
 
 		parent::tearDown();
 	}
@@ -390,6 +390,7 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 	 * @group Workbook
 	 */
 	public function save_createWorkbook_workbookSaved() {
+		$iTime = microtime(true);
 		$sFilename = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'test.xlsx';
 		$oWorkbook = $this->makeWorkbook();
 		$oWorkbook
@@ -398,5 +399,33 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 		;
 
 		$this->assertFileExists($sFilename);
+
+		//echo "\n" . (microtime(true)-$iTime) . "\n";
+		@unlink(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'test.xlsx');
+	}
+
+
+	/**
+	 * @test
+	 * @group Workbook0
+	 */
+	public function save_createWorkbookPerformanceTest_SaveWorkBookIncludingNColumnsAnd4RowsUnter20Seconds() {
+
+		$this->markTestSkipped('only for performance optimization');
+
+		$sFilename = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'test.xlsx';
+
+		$oDataSource = new \Test\Excellence\Stub\PerformanceDataSource();
+		$iTime = microtime(true);
+
+		$oWorkbook = $this->makeWorkbook('performance', $oDataSource);
+		$oWorkbook
+			->create()
+			->save($sFilename)
+		;
+
+//		$this->assertFileExists($sFilename);
+		$this->assertNull(null);
+//		echo "\n" . (microtime(true)-$iTime);
 	}
 }

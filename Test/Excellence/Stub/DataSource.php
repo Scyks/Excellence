@@ -52,13 +52,13 @@ class DataSource implements WorkbookDelegate, DataDelegate {
 	 * sheets
 	 * @var array
 	 */
-	private $aSheets = array();
+	protected $aSheets = array();
 
 	/**
 	 * sheet data
 	 * @var array
 	 */
-	private $aData = array();
+	protected $aData = array();
 
 	/**
 	 * construction - load data
@@ -135,7 +135,7 @@ class DataSource implements WorkbookDelegate, DataDelegate {
 	 * @return int
 	 */
 	public function numberOfRowsInSheet(Workbook $oWorkbook, Sheet $oSheet) {
-		return 4;
+		return count($this->aData[$oSheet->getIdentifier()]);
 	}
 
 	/**
@@ -147,7 +147,7 @@ class DataSource implements WorkbookDelegate, DataDelegate {
 	 * @return int
 	 */
 	public function numberOfColumnsInSheet(Workbook $oWorkbook, Sheet $oSheet) {
-		return 3;
+		return count($this->aData[$oSheet->getIdentifier()][0]);
 	}
 
 	/**

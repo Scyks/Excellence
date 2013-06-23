@@ -225,7 +225,6 @@ class Workbook {
 			throw new \LogicException('DataDelegate::numberOfColumnsInSheet have to return an integer value bigger than zero.');
 		}
 
-
 		$oDom = new \DOMDocument('1.0', 'utf-8');
 		$oSheets = $oDom->createElement('sheets');
 		$oSheets->setAttribute('id', $oSheet->getIdentifier());
@@ -471,12 +470,12 @@ class Workbook {
 							. '<vt:lpstr>Arbeitsblätter</vt:lpstr>'
 						. '</vt:variant>'
 						. '<vt:variant>'
-							. '<vt:i4>%d</vt:i4>' // replaces %d with number of sheets
+							. '<vt:i4>%1$d</vt:i4>' // replaces %d with number of sheets
 						. '</vt:variant>'
 					. '</vt:vector>'
 				. '</HeadingPairs>'
 				. '<TitlesOfParts>'
-					. '<vt:vector size="2" baseType="lpstr">%s</vt:vector>' // replaces %s with sheet names
+					. '<vt:vector size="%1$d" baseType="lpstr">%2$s</vt:vector>' // replaces %s with sheet names
 				. '	</TitlesOfParts>'
 				. '	<Company>Excellence</Company>'
 				. '	<LinksUpToDate>false</LinksUpToDate>'
@@ -492,7 +491,6 @@ class Workbook {
 		// iterate dom sheets
 		foreach($this->oSheets->getElementsByTagName('sheet') as $oSheet) {
 			/** @var \DomElement $oSheet */
-
 			// add filename by sheet identifier
 			$sSheets .= sprintf($sSheetTemplate, $oSheet->nodeValue);
 
