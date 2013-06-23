@@ -38,6 +38,7 @@
 namespace Test\Excellence\Stub;
 
 use \Excellence\Delegates\WorkbookDelegate;
+use \Excellence\Delegates\DataDelegate;
 use \Excellence\Workbook;
 use \Excellence\Sheet;
 
@@ -45,7 +46,7 @@ use \Excellence\Sheet;
  * Stub Data Source for Tests
  * @package Test\Excellence\Stub
  */
-class DataSource implements WorkbookDelegate {
+class DataSource implements WorkbookDelegate, DataDelegate {
 
 	/**
 	 * sheets
@@ -54,11 +55,32 @@ class DataSource implements WorkbookDelegate {
 	private $aSheets = array();
 
 	/**
-	 * constrcution - load data
+	 * sheet data
+	 * @var array
+	 */
+	private $aData = array();
+
+	/**
+	 * construction - load data
 	 */
 	public function __construct() {
 		$this->aSheets[] = new Sheet('sheet1', 'Sheet 1');
 		$this->aSheets[] = new Sheet('sheet2', 'Sheet 2');
+
+		$this->aData['sheet1'][0][] = 'row1col1';
+		$this->aData['sheet1'][0][] = 42;
+		$this->aData['sheet1'][0][] = 42.34;
+		$this->aData['sheet1'][1][] = 'row2col1';
+		$this->aData['sheet1'][1][] = 42;
+		$this->aData['sheet1'][1][] = 42.34;
+		$this->aData['sheet1'][2][] = 'row3col1';
+		$this->aData['sheet1'][2][] = 42;
+		$this->aData['sheet1'][2][] = 42.34;
+		$this->aData['sheet1'][3][1] = '=SUM(B1:B3)';
+		$this->aData['sheet1'][3][2] = '=SUM(C1:C3)';
+
+		$this->aData['sheet2'] = $this->aData['sheet1'];
+
 	}
 
 #pragma mark - WorkbookDelegate implementation
@@ -101,7 +123,50 @@ class DataSource implements WorkbookDelegate {
 	 * @return mixed
 	 */
 	public function dataSourceForWorkbookAndSheet(Workbook $oWorkbook, Sheet $oSheet) {
-		// TODO: Implement dataSourceForWorkbookAndSheet() method.
+		return $this;
+	}
+
+	/**
+	 * returns an integer value how many rows a sheet for workbook contains.
+	 *
+	 * @param Workbook $oWorkbook
+	 * @param Sheet $oSheet
+	 *
+	 * @return int
+	 */
+	public function numberOfRowsInSheet(Workbook $oWorkbook, Sheet $oSheet) {
+		return 4;
+	}
+
+	/**
+	 * returns an integer value how many columns a sheet for workbook contains.
+	 *
+	 * @param Workbook $oWorkbook
+	 * @param Sheet $oSheet
+	 *
+	 * @return int
+	 */
+	public function numberOfColumnsInSheet(Workbook $oWorkbook, Sheet $oSheet) {
+		return 3;
+	}
+
+	/**
+	 * returns a value for sheet cell by given workbook, sheet, row number and
+	 * column number. possible values are integers, floats, doubles and strings.
+	 * An Excel function like "=SUM(A1:A4)" will also provided as string.
+	 *
+	 * @param Workbook $oWorkbook
+	 * @param Sheet $oSheet
+	 * @param integer $iRow
+	 * @param integer $iColumn
+	 *
+	 * @return string|float|double|int
+	 */
+	public function valueForRowAndColumn(Workbook $oWorkbook, Sheet $oSheet, $iRow, $iColumn) {
+		if (!isset($this->aData[$oSheet->getIdentifier()][$iRow][$iColumn]))
+			return null;
+
+		return $this->aData[$oSheet->getIdentifier()][$iRow][$iColumn];
 	}
 
 }

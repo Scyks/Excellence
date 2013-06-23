@@ -37,48 +37,48 @@
 
 namespace Excellence\Delegates;
 
-use \Excellence\Workbook;
-use \Excellence\Sheet;
+use Excellence\Sheet;
+use Excellence\Workbook;
 
 /**
- * Workbook delegate interface to provide minimum functionality to
- * create an Excel document.
- *
+ * Data source delegate interface to provide functionality to create data
+ * for a sheet of an Excel document
+ * .
  * @package Excellence\Delegates
  */
-interface WorkbookDelegate {
+interface DataDelegate {
 
 	/**
-	 * returns integer value of how many sheets this workbook
-	 * will contain.
-	 *
-	 * @param Workbook $oWorkbook
-	 *
-	 * @return int
-	 */
-	public function numberOfSheetsInWorkbook(Workbook $oWorkbook);
-
-	/**
-	 * Return a Sheet for Workbook by given sheet index. If there
-	 * three sheets (numberOfSheetsInWorkbook) available, this
-	 * method will called three times by provide sheet index 0, 1
-	 * and 2.
-	 *
-	 * @param Workbook $oWorkbook
-	 * @param integer $iSheetIndex
-	 *
-	 * @return Sheet
-	 */
-	public function getSheetForWorkBook(Workbook $oWorkbook, $iSheetIndex);
-
-	/**
-	 * Return a data source instance for given workbook and sheet.
-	 * This method will be called n times. N is the number retrieved
-	 * by numberOfSheetsInWorkbook.
+	 * returns an integer value how many rows a sheet for workbook contains.
 	 *
 	 * @param Workbook $oWorkbook
 	 * @param Sheet $oSheet
-	 * @return mixed
+	 *
+	 * @return int
 	 */
-	public function dataSourceForWorkbookAndSheet(Workbook $oWorkbook, Sheet $oSheet);
+	public function numberOfRowsInSheet(Workbook $oWorkbook, Sheet $oSheet);
+
+	/**
+	 * returns an integer value how many columns a sheet for workbook contains.
+	 *
+	 * @param Workbook $oWorkbook
+	 * @param Sheet $oSheet
+	 *
+	 * @return int
+	 */
+	public function numberOfColumnsInSheet(Workbook $oWorkbook, Sheet $oSheet);
+
+	/**
+	 * returns a value for sheet cell by given workbook, sheet, row number and
+	 * column number. possible values are integers, floats, doubles and strings.
+	 * An Excel function like "=SUM(A1:A4)" will also provided as string.
+	 *
+	 * @param Workbook $oWorkbook
+	 * @param Sheet $oSheet
+	 * @param integer $iRow
+	 * @param integer $iColumn
+	 *
+	 * @return string|float|double|int
+	 */
+	public function valueForRowAndColumn(Workbook $oWorkbook, Sheet $oSheet, $iRow, $iColumn);
 }
