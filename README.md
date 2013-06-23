@@ -29,6 +29,13 @@ Excel Table looks like this one:
 | 10000  / 20       | 33.25 MB   | ~ 19  seconds  | 1 MB      |
 | 50000  / 20       | 164.25 MB  | ~ 200 seconds  | 5.1 MB    |
 
+The filesize against PHPExcel is a little bit higher, but i know how to fix this.
+Currently i don't use string reference method in Excel. I will add this in further
+development.
+
+Maybe there is a way to speed it up more then this. I'm not happy about current
+implementation of generation XML files. I will refactor this.
+
 ### PHPExcel library
 
 | Lines / Columns   | PHP Memory | Execution Time | Filesize  |
