@@ -11,13 +11,14 @@ Performance tests made on Mac OSX 10.9 (2.4 GHz Intel Core 2 Duo, 4 GB DDR3 Ram)
 PHP 5.4 executing in terminal window. There where no styles added or something
 else, this is just creating a simple lightweight Excel file.
 
-Exel file looks like this one:
+Excel Table looks like this one:
 
-| Rows  | A                 | B  | C   | D             | .... | T             |
-| ----- | ----------------- | -- | --- | ------------- | .... | ------------- |
-| 1     | test column value | 22 | 0.9 | =SUM(B1:C1)   | .... | =SUM(Q1:R1)   |
-| 2     | test column value | 22 | 0.9 | =SUM(B2:C2)   | .... | =SUM(Q2:R2)   |
-| ...   | ...               | .. | ... | ...           | .... | ...           |
+| Rows  | A                 | B   | C   | D             | ... | T             |
+| ----- | ----------------- | --- | --- | ------------- | --- | ------------- |
+| 1     | test column value | 22  | 0.9 | =SUM(B1:C1)   | ... | =SUM(Q1:R1)   |
+| 2     | test column value | 22  | 0.9 | =SUM(B2:C2)   | ... | =SUM(Q2:R2)   |
+| ...   | ...               | ... | ... | ...           | ... | ...           |
+
 
 ### Excellence library
 
