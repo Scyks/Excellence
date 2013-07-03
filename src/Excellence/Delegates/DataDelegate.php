@@ -1,7 +1,7 @@
 <?php
 /**
  * @author        Ronald Marske <scyks@ceow.de>
- * @filesource    DataSource.php
+ * @filesource    src/Excellence/Delegates/DataDelegate.php
  *
  * @copyright     Copyright (c) 2013 Ronald Marske, All rights reserved.
  *

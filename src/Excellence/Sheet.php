@@ -1,7 +1,7 @@
 <?php
 /**
  * @author        Ronald Marske <scyks@ceow.de>
- * @filesource    Sheet.php
+ * @filesource    src/Excellence/Sheet.php
  *
  * @copyright     Copyright (c) 2013 Ronald Marske, All rights reserved.
  *
