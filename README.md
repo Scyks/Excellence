@@ -22,23 +22,17 @@ Excel Table looks like this one:
 
 ### Excellence library
 
-| Lines / Columns   | PHP Memory | Execution Time  | Filesize   |
-| ----------------- | ---------- | --------------- | ---------- |
-| 1000   / 20       | 4 MB       | ~ 1.7  seconds  |  102 KB    |
-| 1000   / 100      | 15.5 MB    | ~ 10   seconds  |  483 KB    |
-| 5000   / 20       | 17 MB      | ~ 8    seconds  |  513 KB    |
-| 5000   / 100      | 76 MB      | ~ 56   seconds  |  2.4 KB    |
-| 10000  / 20       | 33.25 MB   | ~ 19   seconds  |  1.0 MB    |
-| 10000  / 100      | 151.75 MB  | ~ 116  seconds  |  4.7 MB    |
-| 50000  / 20       | 164.25 MB  | ~ 200  seconds  |  5.1 MB    |
-| 50000  / 100      | 757.75 MB  | ~ 1133 seconds  | 23.6 MB    |
+| Lines / Columns   | PHP Memory  | Execution Time  | Filesize   |
+| ----------------- | ----------- | --------------- | ---------- |
+| 1000   / 20       | 5,25    MB  | ~ 0,7  seconds  |   87 KB    |
+| 1000   / 100      | 20.25   MB  | ~ 4,7  seconds  |  402 KB    |
+| 5000   / 20       | 21,50   MB  | ~ 4    seconds  |  416 KB    |
+| 5000   / 100      | 109,00  MB  | ~ 20   seconds  |  1,9 MB    |
+| 10000  / 20       | 42,00   MB  | ~ 7    seconds  |  826 KB    |
+| 10000  / 100      | 217,00  MB  | ~ 41   seconds  |  4,9 MB    |
+| 50000  / 20       | 229.25  MB  | ~ 37   seconds  |  4,0 MB    |
+| 50000  / 100      | 1022.75 MB  | ~ 213  seconds  | 19.3 MB    |
 
-The filesize against PHPExcel is a little bit higher, but i know how to fix this.
-Currently i don't use string reference method in Excel. I will add this in further
-development.
-
-Maybe there is a way to speed it up more then this. I'm not happy about current
-implementation of generation XML files. I will refactor this.
 
 ### PHPExcel library
 
@@ -49,6 +43,6 @@ implementation of generation XML files. I will refactor this.
 | 5000   / 20       | 81.75  MB  | ~ 58  seconds  | 412 KB    |
 | 5000   / 100      | 341.25 MB  | ~ 324 seconds  | 2.0 MB    |
 | 10000  / 20       | 153.5  MB  | ~ 130 seconds  | 816 KB    |
-| 10000  / 100      | 651.0  MB  | ~ 744 seconds  | 4 MB      |
-| 50000  / 20       | 736 MB     | ~ 763 seconds  | 4.1 MB    |
+| 10000  / 100      | 651.0  MB  | ~ 744 seconds  | 4,0 MB    |
+| 50000  / 20       | 736 MB     | ~ 763 seconds  | 4,1 MB    |
 | 50000  / 100      | > 2,7 GB   | > 70  minutes  | ?         |

@@ -46,7 +46,7 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 
 	public function tearDown() {
 		// try to unlink created xlsx file
-//		@unlink(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'test.xlsx');
+		@unlink(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'test.xlsx');
 
 		parent::tearDown();
 	}
@@ -214,18 +214,30 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 	public function create_createSheetXml_ScheetXmlCreated() {
 		$oWorkbook = $this->makeWorkbook();
 
-		$sCompareXml = '<sheets count="2">'
-			. '<sheet id="sheet1">Sheet 1</sheet>'
-			. '<sheet id="sheet2">Sheet 2</sheet>'
-			. '</sheets>'
-		;
+		$sCompareXml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+			. '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+				. '<fileVersion appName="xl" lastEdited="5" lowestEdited="5" rupBuild="23206"/>'
+				. '<workbookPr showInkAnnotation="0" autoCompressPictures="0"/>'
+				. '<bookViews>'
+					. '<workbookView xWindow="0" yWindow="0" windowWidth="25600" windowHeight="14460" tabRatio="500"/>'
+				. '</bookViews>'
+				. '<sheets>'
+					. '<sheet name="Sheet 1" sheetId="1" r:id="rId1"/>'
+					. '<sheet name="Sheet 2" sheetId="2" r:id="rId2"/>'
+				. '</sheets>'
+				. '<calcPr calcId="140000" concurrentCalc="0"/>'
+				. '<extLst>'
+					. '<ext xmlns:mx="http://schemas.microsoft.com/office/mac/excel/2008/main" uri="{7523E5D3-25F3-A5E0-1632-64F254C22452}">'
+						. '<mx:ArchID Flags="2"/>'
+					. '</ext>'
+				. '</extLst>'
+			. "</workbook>";
 
-		$oDom = new \DOMDocument('1.0', 'utf-8');
-		$oDom->loadXML($sCompareXml);
 
 		$oWorkbook->create();
 
-		$this->assertAttributeEquals($oDom, 'oSheets', $oWorkbook);
+		$this->assertAttributeEquals($sCompareXml, 'sWorkbook', $oWorkbook);
+
 	}
 
 	/**
@@ -307,68 +319,64 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 	public function create_createSheetDataXml_ScheetDataXmlCreated() {
 		$oWorkbook = $this->makeWorkbook();
 
-		$sCompareXml = '<sheets id="%s" rows="4" columns="3" dimension="A1:C4">'
-			. '<row id="1">'
-				. '<column id="A1" type="1">row1col1</column>'
-				. '<column id="B1" type="2">42</column>'
-				. '<column id="C1" type="2">42.34</column>'
-			. '</row>'
-			. '<row id="2">'
-				. '<column id="A2" type="1">row2col1</column>'
-				. '<column id="B2" type="2">42</column>'
-				. '<column id="C2" type="2">42.34</column>'
-			. '</row>'
-			. '<row id="3">'
-				. '<column id="A3" type="1">row3col1</column>'
-				. '<column id="B3" type="2">42</column>'
-				. '<column id="C3" type="2">42.34</column>'
-			. '</row>'
-			. '<row id="4">'
-				. '<column id="B4" type="4">SUM(B1:B3)</column>'
-				. '<column id="C4" type="4">SUM(C1:C3)</column>'
-			. '</row>'
-			. '</sheets>'
+		$sCompareXml = '<?xml version="1.0" encoding="UTF-8"?>'
+		. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
+			. '<dimension ref="A1:C4"/>'
+			. '<sheetViews>'
+				. '<sheetView tabSelected="1" workbookViewId="0"/>'
+			. '</sheetViews>'
+			. '<sheetData>'
+				. '<row r="1">'
+					. '<c r="A1" t="s"><v>0</v></c>'
+					. '<c r="B1" t="n"><v>42</v></c>'
+					. '<c r="C1" t="n"><v>42.34</v></c>'
+				. '</row>'
+				. '<row r="2">'
+					. '<c r="A2" t="s"><v>1</v></c>'
+					. '<c r="B2" t="n"><v>42</v></c>'
+					. '<c r="C2" t="n"><v>42.34</v></c>'
+				. '</row>'
+				. '<row r="3">'
+					. '<c r="A3" t="s"><v>2</v></c>'
+					. '<c r="B3" t="n"><v>42</v></c>'
+					. '<c r="C3" t="n"><v>42.34</v></c>'
+				. '</row>'
+				. '<row r="4">'
+					. '<c r="B4"><f>SUM(B1:B3)</f></c>'
+					. '<c r="C4"><f>SUM(C1:C3)</f></c>'
+				. '</row>'
+			. '</sheetData>'
+		. '</worksheet>'
 		;
 
-		$oDom = new \DOMDocument('1.0', 'utf-8');
-		$oDom->loadXML(sprintf($sCompareXml, 'sheet1'));
-
-		$oDom2 = new \DOMDocument('1.0', 'utf-8');
-		$oDom2->loadXML(sprintf($sCompareXml, 'sheet2'));
-
-		$aCompare = array(
-			'sheet1' => $oDom,
-			'sheet2' => $oDom2,
-		);
 
 		$oWorkbook->create();
 
+		$oReflection = new \ReflectionClass($oWorkbook);
+		$oSheetData = $oReflection->getProperty('aSheetData');
+		$oSheetData->setAccessible(true);
+		$aSheets = $oSheetData->getValue($oWorkbook);
 
-
-		$this->assertAttributeEquals($aCompare, 'aSheetData', $oWorkbook);
+		$this->assertXmlStringEqualsXmlString($aSheets['sheet1'], $sCompareXml);
+		$this->assertXmlStringEqualsXmlString($aSheets['sheet2'], $sCompareXml);
 	}
 
 	/**
 	 * @test
 	 * @group Workbook
 	 */
-	public function create_dataIncludingFurmulas_CalcChainXmlCreated() {
+	public function create_SharedStrings_SharedStringsCreated() {
 		$oWorkbook = $this->makeWorkbook();
 
-		$sCompareXml = '<calcChain xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-				. '<c r="B4" i="1"/>'
-				. '<c r="C4" i="1"/>'
-				. '<c r="B4" i="2"/>'
-				. '<c r="C4" i="2"/>'
-			. '</calcChain>'
-		;
-
-		$oDom = new \DOMDocument('1.0', 'utf-8');
-		$oDom->loadXML($sCompareXml);
+		$aCompare = array(
+			'row1col1' => 0,
+			'row2col1' => 1,
+			'row3col1' => 2,
+		);
 
 		$oWorkbook->create();
 
-		$this->assertAttributeEquals($oDom, 'oCalcChain', $oWorkbook);
+		$this->assertAttributeEquals($aCompare, 'aSharedStrings', $oWorkbook);
 	}
 
 	/**
@@ -382,6 +390,7 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertSame($oCompare, $oWorkbook);
 	}
+
 
 #pragma mark - save
 
@@ -407,11 +416,11 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Workbook0
+	 * @group Workbook
 	 */
 	public function save_createWorkbookPerformanceTest_SaveWorkBookIncludingNColumnsAnd4RowsUnter20Seconds() {
 
-		$this->markTestSkipped('only for performance optimization');
+		//$this->markTestSkipped('only for performance optimization');
 
 		$sFilename = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'test.xlsx';
 
@@ -424,8 +433,8 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 			->save($sFilename)
 		;
 
-//		$this->assertFileExists($sFilename);
-		$this->assertNull(null);
-//		echo "\n" . (microtime(true)-$iTime);
+		$this->assertLessThan(0.36, (microtime(true)-$iTime));
+
 	}
 }
+

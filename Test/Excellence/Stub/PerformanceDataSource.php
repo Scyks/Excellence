@@ -64,8 +64,8 @@ class PerformanceDataSource extends DataSource implements WorkbookDelegate, Data
 	public function __construct() {
 		$this->aSheets[] = new Sheet('sheet1', 'Sheet 1');
 
-		for ($iRow = 0; $iRow < 10; $iRow++) {
-			for ($iColumn = 0; $iColumn < 10; $iColumn += 4) {
+		for ($iRow = 0; $iRow < 100; $iRow++) {
+			for ($iColumn = 0; $iColumn < 20; $iColumn += 4) {
 
 				$this->aData['sheet1'][$iRow][$iColumn] = 'test column value';
 				$this->aData['sheet1'][$iRow][$iColumn+1] = 22;
@@ -74,6 +74,8 @@ class PerformanceDataSource extends DataSource implements WorkbookDelegate, Data
 			}
 
 		}
+
+		//echo $iRow . ' / ' . $iColumn . "\n";
 
 
 	}

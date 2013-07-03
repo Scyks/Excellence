@@ -48,11 +48,6 @@ use Excellence\Sheet;
  */
 class Workbook {
 
-#pragma mark - constants
-
-	const TYPE_STRING    = 1;
-	const TYPE_NUMBER    = 2;
-	const TYPE_FUNCTION  = 4;
 
 #pragma mark - member variables
 
@@ -71,9 +66,21 @@ class Workbook {
 	/**
 	 * contains dom document including sheets
 	 *
-	 * @var \DomDocument|null
+	 * @var array
 	 */
-	private $oSheets;
+	private $aSheets = array();
+
+	/**
+	 * contains number of sheets in document
+	 * @var int
+	 */
+	private $iSheets = 0;
+
+	/**
+	 * Contains workbook XML file as string because it's faster than Domdocument
+	 * @var string
+	 */
+	private $sWorkbook = '';
 
 	/**
 	 * contains an array [sheet identifier] => DomDocument including sheet data.
@@ -83,11 +90,18 @@ class Workbook {
 	private $aSheetData;
 
 	/**
-	 * contains calc chain document
+	 * contains calc chain xml nodes as strings
 	 *
-	 * @var null|\DomDocument
+	 * @var string
 	 */
-	private $oCalcChain = null;
+	private $sCalcChain = '';
+
+	/**
+	 * contains array with shared strings
+	 * string => id
+	 * @var array
+	 */
+	private $aSharedStrings = array();
 
 #pragma mark - construction
 
@@ -131,15 +145,15 @@ class Workbook {
 	public function create() {
 
 		// get number of sheets from delegate
-		$iSheets = (int) $this->oDelegate->numberOfSheetsInWorkbook($this);
+		$this->iSheets = (int) $this->oDelegate->numberOfSheetsInWorkbook($this);
 
 		// make sure that there is minimum one sheet
-		if (0 >= $iSheets) {
+		if (0 >= $this->iSheets) {
 			throw new \LogicException('WorkbookDelegate::numberOfSheetsInWorkbook have to return an integer bigger than zero.');
 		}
 
 		// create Sheet Xml Data
-		$this->createSheetXml($iSheets);
+		$this->createSheetXml();
 
 		return $this;
 
@@ -151,23 +165,17 @@ class Workbook {
 	 * Document, but with an XSLT it is easier to handle namespaces, format
 	 * changes and further development s of this library.
 	 *
-	 * @param int $iSheets
-	 *
 	 * @throws \LogicException
 	 */
-	private function createSheetXml($iSheets) {
+	private function createSheetXml() {
 
-		$this->oSheets = new \DOMDocument('1.0', 'utf-8');
+		$this->sWorkbook = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+			. '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><fileVersion appName="xl" lastEdited="5" lowestEdited="5" rupBuild="23206"/><workbookPr showInkAnnotation="0" autoCompressPictures="0"/>'
+			. '<bookViews><workbookView xWindow="0" yWindow="0" windowWidth="25600" windowHeight="14460" tabRatio="500"/></bookViews>'
+			. '<sheets>';
 
-		// sheets node
-		$oSheets = $this->oSheets->createElement('sheets');
-		$oSheets->setAttribute('count', $iSheets);
-
-		// add sheets node to document
-		$this->oSheets->appendChild($oSheets);
-
-		// iterate sheets
-		for($iSheet = 0; $iSheet < $iSheets; $iSheet++) {
+			// iterate sheets
+		for($iSheet = 0; $iSheet < $this->iSheets; $iSheet++) {
 
 			/** @var Sheet $oSheet */
 			$oSheet = $this->oDelegate->getSheetForWorkBook($this, $iSheet);
@@ -177,19 +185,16 @@ class Workbook {
 				throw new \LogicException(sprintf('WorkbookDelegate::getSheetForWorkBook have to return an instance of \Excellence\Sheet, "%s" given.', gettype($oSheet)));
 			}
 
-			// create sheet node
-			$oXmlSheet = $this->oSheets->createElement('sheet', $oSheet->getName());
-			$oXmlSheet->setAttribute('id', $oSheet->getIdentifier());
+			$this->aSheets[] = $oSheet;
 
-			// append sheet to sheets node
-			$oSheets->appendChild($oXmlSheet);
+			$this->sWorkbook .= '<sheet name="' . $oSheet->getName() . '" sheetId="' . ($iSheet + 1) . '" r:id="rId' . ($iSheet + 1) . '"/>';
 
 			// create sheet data by sheet
 			$this->createSheetDataXml($oSheet, $iSheet + 1);
 		}
 
-		// unset variables
-		unset($oSheets, $oXmlSheet, $iSheet, $iSheets);
+		$this->sWorkbook .= '</sheets><calcPr calcId="140000" concurrentCalc="0"/><extLst><ext xmlns:mx="http://schemas.microsoft.com/office/mac/excel/2008/main" uri="{7523E5D3-25F3-A5E0-1632-64F254C22452}"><mx:ArchID Flags="2"/></ext></extLst></workbook>';
+
 
 	}
 
@@ -225,26 +230,27 @@ class Workbook {
 			throw new \LogicException('DataDelegate::numberOfColumnsInSheet have to return an integer value bigger than zero.');
 		}
 
-		$oDom = new \DOMDocument('1.0', 'utf-8');
-		$oSheets = $oDom->createElement('sheets');
-		$oSheets->setAttribute('id', $oSheet->getIdentifier());
-		$oSheets->setAttribute('rows', $iRows);
-		$oSheets->setAttribute('columns', $iColumns);
 
-		$oDom->appendChild($oSheets);
-
+		// Dimension Vars
 		$sDimensionFrom = null;
 		$sDimensionTo = null;
+
+		// create workbook xml
+		$sWorkbook = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+		. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
+			. '<dimension ref="%s"/>'
+			. '<sheetViews>'
+				. '<sheetView tabSelected="1" workbookViewId="0"/>'
+			. '</sheetViews>'
+			.'<sheetData>'
+		;
+
 
 		// sheet loop
 		for($iRow = 0; $iRow < $iRows; $iRow++) {
 
 			// create row
-			$oRow = $oDom->createElement('row');
-			$oRow->setAttribute('id', $iRow + 1);
-
-			// append row to sheets
-			$oSheets->appendChild($oRow);
+			$sWorkbook .= '<row r="' . ($iRow + 1) . '">';
 
 			for($iColumn = 0; $iColumn < $iColumns; $iColumn++) {
 
@@ -276,31 +282,33 @@ class Workbook {
 
 				// determine value type
 				if ('string' == $iType && '=' == substr($value, 0, 1)) {
-					$iType = self::TYPE_FUNCTION;
-					$value = substr($value, 1);
 
+					// add value to calchain
 					$this->addColumnToCalcChain($sCord, $iSheet);
 
+					// add value to column
+					$sWorkbook .= '<c r="' . $sCord . '"><f>' . substr($value, 1) . '</f></c>';
+
 				} elseif('string' == $iType) {
-					$iType = self::TYPE_STRING;
+					$iNum = $this->addValueToSharedStrings($value);
+
+					// add value to column
+					$sWorkbook .= '<c r="' . $sCord . '" t="s"><v>' . $iNum . '</v></c>';
 				} else {
-					$iType = self::TYPE_NUMBER;
+
+					// add value to column
+					$sWorkbook .= '<c r="' . $sCord . '" t="n"><v>' . $value . '</v></c>';
 				}
 
-				// create column
-				$oColumn = $oDom->createElement('column', $value);
-				$oColumn->setAttribute('id', $sCord);
-				$oColumn->setAttribute('type', $iType);
-
 				// add column to row
-				$oRow->appendChild($oColumn);
 			}
+
+			$sWorkbook .= '</row>';
 		}
 
-		$oSheets->setAttribute('dimension', $sDimensionFrom . ':' . $sDimensionTo);
-		$oSheets->setAttribute('dimension', $sDimensionFrom . ':' . $sDimensionTo);
+		$sWorkbook .= '</sheetData></worksheet>';
 
-		$this->aSheetData[$oSheet->getIdentifier()] = $oDom;
+		$this->aSheetData[$oSheet->getIdentifier()] = sprintf($sWorkbook, $sDimensionFrom . ':' . $sDimensionTo);
 	}
 
 	/**
@@ -325,32 +333,51 @@ class Workbook {
 
 	/**
 	 * add a column to calc chain. if there is no calc chain document created
-	 * this method will create one.
+	 * this method will create one. To work with strings will increase memory
+	 * and it is faster than working with DomDocument or arrays.
 	 *
 	 * @param string $sCord
 	 * @param int $iSheet
 	 */
 	private function addColumnToCalcChain($sCord, $iSheet) {
 
-		if (null == $this->oCalcChain) {
-			$this->oCalcChain = new \DOMDocument('1.0', 'utf-8');
-			$oCalcChain = $this->oCalcChain->createElementNS('http://schemas.openxmlformats.org/spreadsheetml/2006/main', 'calcChain', '');
-			$this->oCalcChain->appendChild($oCalcChain);
-		} else {
-			$oCalcChain = $this->oCalcChain->getElementsByTagName('calcChain')->item(0);
+		$this->sCalcChain .= '<c r="' . $sCord . '" i="' . $iSheet . '"/>';
+
+	}
+
+	/**
+	 * add a string to shared strings and returns index of this value
+	 * @param string $value
+	 *
+	 * @return int
+	 */
+	private function addValueToSharedStrings($value) {
+
+		// check if value currently exists and return index
+		if (array_key_exists($value, $this->aSharedStrings)) {
+			return $this->aSharedStrings[$value];
 		}
 
-		$oColumn = $this->oCalcChain->createElement('c');
-		$oColumn->setAttribute('r', $sCord);
-		$oColumn->setAttribute('i', $iSheet);
+		// get current count
+		$iNum = count($this->aSharedStrings);
 
-		$oCalcChain->appendChild($oColumn);
+		// add value to shared strings table
+		$this->aSharedStrings[$value] = $iNum;
+
+		// return current index;
+		return $iNum;
 
 
 	}
 
 #pragma mark - saving and creating officeOpenDocument files
 
+	/**
+	 * this method will save an xlsx file
+	 * @param string $sFilename
+	 *
+	 * @throws \LogicException
+	 */
 	public function save($sFilename) {
 
 		// create zip file
@@ -377,9 +404,15 @@ class Workbook {
 		$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . '_rels' . DIRECTORY_SEPARATOR . 'workbook.xml.rels', $this->workbookRelations());
 
 		// add Calc chain if exists
-		if ($this->oCalcChain instanceof \DomDocument) {
-			$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'calcChain.xml', $this->oCalcChain->saveXML());
+		if (!empty($this->sCalcChain)) {
+			$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'calcChain.xml', $this->calcChain());
 		}
+
+		// add shared strings
+		if (!empty($this->aSharedStrings)) {
+			$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'sharedStrings.xml', $this->sharedStrings());
+		}
+
 		// add styles
 		$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'styles.xml', $this->workbookStyles());
 
@@ -387,9 +420,11 @@ class Workbook {
 		$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'theme' . DIRECTORY_SEPARATOR . 'theme1.xml', $this->workbookTheme());
 
 		// add workbook information
-		$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'workbook.xml', $this->workbook());
+		$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'workbook.xml', $this->sWorkbook);
 
-		$this->workbookSheets($oZip);
+		foreach($this->aSheetData as $sSheetId => $sDom) {
+			$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'worksheets' . DIRECTORY_SEPARATOR . $sSheetId . '.xml', $sDom);
+		}
 
 		$oZip->close();
 	}
@@ -423,10 +458,13 @@ class Workbook {
 			. '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
 			. '<Override PartName="/xl/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>'
 			. '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
-//			. '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>'
 
-			// add calchain if exists
-			. ((null !== $this->oCalcChain) ? '<Override PartName="/xl/calcChain.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml"/>' : '')
+			// add shared strings if exists
+			. ((!empty($this->aSharedStrings)) ? '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>' : '')
+
+			// add calc chain if exists
+			. ((!empty($this->sCalcChain)) ? '<Override PartName="/xl/calcChain.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml"/>' : '')
+
 			. '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>'
 			. '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>'
 
@@ -442,11 +480,11 @@ class Workbook {
 		$sSheetTemplate = '<Override PartName="/xl/worksheet/%s.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
 
 		// iterate dom sheets
-		foreach($this->oSheets->getElementsByTagName('sheet') as $oSheet) {
-			/** @var \DomElement $oSheet */
+		foreach($this->aSheets as $oSheet) {
+			/** @var Sheet $oSheet */
 
 			// add filename by sheet identifier
-			$sSheets .= sprintf($sSheetTemplate, $oSheet->getAttribute('id'));
+			$sSheets .= sprintf($sSheetTemplate, $oSheet->getIdentifier());
 		}
 
 		// return generated xml string
@@ -459,47 +497,45 @@ class Workbook {
 	 * @return string
 	 */
 	private function workbookAppXml() {
+
+		// Create Xml
 		$sXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
 			. '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">'
-				. '<Application>Excellence</Application>'
-				. '<DocSecurity>0</DocSecurity>'
-				. '<ScaleCrop>false</ScaleCrop>'
-				. '<HeadingPairs>'
-					. '<vt:vector size="2" baseType="variant">'
-						. '<vt:variant>'
-							. '<vt:lpstr>Arbeitsblätter</vt:lpstr>'
-						. '</vt:variant>'
-						. '<vt:variant>'
-							. '<vt:i4>%1$d</vt:i4>' // replaces %d with number of sheets
-						. '</vt:variant>'
-					. '</vt:vector>'
-				. '</HeadingPairs>'
-				. '<TitlesOfParts>'
-					. '<vt:vector size="%1$d" baseType="lpstr">%2$s</vt:vector>' // replaces %s with sheet names
-				. '	</TitlesOfParts>'
-				. '	<Company>Excellence</Company>'
-				. '	<LinksUpToDate>false</LinksUpToDate>'
-				. '	<SharedDoc>false</SharedDoc>'
-				. '	<HyperlinksChanged>false</HyperlinksChanged>'
-				. '	<AppVersion>14.0300</AppVersion>'
+			. '<Application>Excellence</Application>'
+			. '<DocSecurity>0</DocSecurity>'
+			. '<ScaleCrop>false</ScaleCrop>'
+			. '<HeadingPairs>'
+			. '<vt:vector size="2" baseType="variant">'
+			. '<vt:variant>'
+			. '<vt:lpstr>Arbeitsblätter</vt:lpstr>'
+			. '</vt:variant>'
+			. '<vt:variant>'
+			. '<vt:i4>%1$d</vt:i4>' // replaces %d with number of sheets
+			. '</vt:variant>'
+			. '</vt:vector>'
+			. '</HeadingPairs>'
+			. '<TitlesOfParts>'
+			. '<vt:vector size="%1$d" baseType="lpstr">%2$s</vt:vector>' // replaces %s with sheet names
+			. '	</TitlesOfParts>'
+			. '	<Company>Excellence</Company>'
+			. '	<LinksUpToDate>false</LinksUpToDate>'
+			. '	<SharedDoc>false</SharedDoc>'
+			. '	<HyperlinksChanged>false</HyperlinksChanged>'
+			. '	<AppVersion>14.0300</AppVersion>'
 			. '</Properties>'
 		;
 
 		$sSheets = '';
 		$sSheetTemplate = '<vt:lpstr>%s</vt:lpstr>';
-		$iSheets = 0;
-		// iterate dom sheets
-		foreach($this->oSheets->getElementsByTagName('sheet') as $oSheet) {
-			/** @var \DomElement $oSheet */
-			// add filename by sheet identifier
-			$sSheets .= sprintf($sSheetTemplate, $oSheet->nodeValue);
 
-			// @todo: save number of sheets by asking delegate in method createSheetXml
-			// increase sheet count
-			$iSheets ++;
+		// iterate dom sheets
+		foreach($this->aSheets as $oSheet) {
+
+			// add filename by sheet identifier
+			$sSheets .= sprintf($sSheetTemplate, $oSheet->getName());
 		}
 
-		return sprintf($sXml, $iSheets, $sSheets);
+		return sprintf($sXml, $this->iSheets, $sSheets);
 	}
 
 	/**
@@ -520,18 +556,16 @@ class Workbook {
 	}
 
 	/**
-	 * create workbook relations
+	 * create workbook relations as string because it is faster than creating dom documents
 	 *
 	 * @return string
 	 */
 	private function workbookRelations() {
+
+		// Xml
 		$sXml = '<?xml version="1.0"?>'
 			. '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
 				. '%s' // workbook sheets
-//				. '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
-//				. '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>'
-//				. '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>'
-//				. '<Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain" Target="calcChain.xml"/>'
 				. '<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>'
 				. '<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
 			. '</Relationships>'
@@ -539,25 +573,31 @@ class Workbook {
 
 		$sSheets = '';
 		$sSheetTemplate = '<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/%s.xml"/>';
-		$iSheets = 1;
+		$iId = 1;
 		// iterate dom sheets
-		foreach($this->oSheets->getElementsByTagName('sheet') as $oSheet) {
-			/** @var \DomElement $oSheet */
+		foreach($this->aSheets as $oSheet) {
+			/** @var Sheet $oSheet */
 
 			// add filename by sheet identifier
-			$sSheets .= sprintf($sSheetTemplate, $iSheets, $oSheet->getAttribute('id'));
+			$sSheets .= sprintf($sSheetTemplate, $iId, $oSheet->getIdentifier());
 
-			// @todo: save number of sheets by asking delegate in method createSheetXml
-			// increase sheet count
-			$iSheets ++;
+			// increase id
+			$iId ++;
 		}
 
-		if ($this->oCalcChain instanceof \DOMDocument) {
-			$sSheets .= sprintf('<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain" Target="calcChain.xml"/>', $iSheets);
-			$iSheets++;
+		// add calc chain
+		if (!empty($this->sCalcChain)) {
+			$sSheets .= sprintf('<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain" Target="calcChain.xml"/>', $iId);
+			$iId++;
 		}
 
-		return sprintf($sXml, $sSheets, $iSheets, $iSheets + 1);
+		// add Shared Strings
+		if (!empty($this->aSharedStrings)) {
+			$sSheets .= sprintf('<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>', $iId+2);
+		}
+
+		// return generated XML
+		return sprintf($sXml, $sSheets, $iId, $iId + 1);
 	}
 
 	/**
@@ -620,69 +660,34 @@ class Workbook {
 	}
 
 	/**
-	 * create workbook informations
+	 * Generate shared strings xml document.
 	 *
 	 * @return string
 	 */
-	private function workbook() {
-		$sXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-			. '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-    			. '<fileVersion appName="xl" lastEdited="5" lowestEdited="5" rupBuild="23206"/>'
-    			. '<workbookPr showInkAnnotation="0" autoCompressPictures="0"/>'
-    			. '<bookViews>'
-        			. '<workbookView xWindow="0" yWindow="0" windowWidth="25600" windowHeight="14460" tabRatio="500"/>'
-    			. '</bookViews>'
-    			. '<sheets>'
-					. '%s' // %s is replaced by sheet information
-				. '</sheets>'
-    			. '<calcPr calcId="140000" concurrentCalc="0"/>'
-    			. '<extLst>'
-        			. '<ext xmlns:mx="http://schemas.microsoft.com/office/mac/excel/2008/main" uri="{7523E5D3-25F3-A5E0-1632-64F254C22452}">'
-            			. '<mx:ArchID Flags="2"/>'
-        			. '</ext>'
-    			. '</extLst>'
-			. '</workbook>'
+	private function sharedStrings() {
+		$sXml = '<?xml version="1.0" encoding="utf-8"?>'
+			. '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+				. 'count="' . count($this->aSharedStrings) . '" uniqueCount="' . count($this->aSharedStrings) . '">'
 		;
 
-		$sSheets = '';
-		$sSheetTemplate = '<sheet name="%1$s" sheetId="%2$d" r:id="rId%2$d"/>';
-		$iSheets = 1;
-		// iterate dom sheets
-		foreach($this->oSheets->getElementsByTagName('sheet') as $oSheet) {
-			/** @var \DomElement $oSheet */
-
-			// add filename by sheet identifier
-			$sSheets .= sprintf($sSheetTemplate, $oSheet->nodeValue, $iSheets);
-
-			// @todo: save number of sheets by asking delegate in method createSheetXml
-			// increase sheet count
-			$iSheets ++;
+		foreach($this->aSharedStrings as $sString => $iIndex) {
+			$sXml .= '<si><t>' . $sString . '</t></si>';
 		}
 
-		return sprintf($sXml, $sSheets);
+		return $sXml . '</sst>';
 	}
 
 	/**
-	 * generate sheet data
-	 * @param \ZipArchive $oZip
+	 * Generate calc chain document
+	 *
+	 * @return string
 	 */
-	private function workbookSheets(\ZipArchive $oZip) {
-
-		$oXslt = new \XSLTProcessor();
-
-		$oXsl = new \DOMDocument();
-		$oXsl->load(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'workbook.xsl', LIBXML_NOCDATA);
-
-		$oXslt->importStylesheet($oXsl);
-
-		foreach($this->aSheetData as $sSheetId => $oDom) {
-
-			#echo $oXslt->transformToXml($oDom);
-			$oZip->addFromString(
-				'xl' . DIRECTORY_SEPARATOR . 'worksheets' . DIRECTORY_SEPARATOR . $sSheetId . '.xml',
-				$oXslt->transformToXml($oDom)
-			);
-		}
+	private function calcChain() {
+		return '<?xml version="1.0" encoding="utf-8"?>'
+			. '<calcChain xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+			. $this->sCalcChain
+			. '</calcChain>'
+		;
 
 	}
 }
