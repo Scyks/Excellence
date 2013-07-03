@@ -26,17 +26,17 @@ Excel Table looks like this one:
 
 ### Excellence library vs PHPExcel
 
-|                   |     | **Excellence** |                 |            |     | **PHPExcel** |                |            |
-| ----------------- | --- | -------------: | --------------: | ---------: | --- |-----------:  | -------------: | ---------: |
-| *Lines/Columns*   |     | *Memory*       | *Time*          | *Filesize* |     | *Memory*     | *Time*         | *Filesize* |
-| 1000   / 20       |     | 5,25    MB     | ~ 0,7  seconds  |   87 KB    |     | 21.5   MB    | ~ 12  seconds  | 88  KB     |
-| 1000   / 100      |     | 20.25   MB     | ~ 4,7  seconds  |  402 KB    |     | 80.0   MB    | ~ 60  seconds  | 263 KB     |
-| 5000   / 20       |     | 21,50   MB     | ~ 4    seconds  |  416 KB    |     | 81.75  MB    | ~ 58  seconds  | 412 KB     |
-| 5000   / 100      |     | 109,00  MB     | ~ 20   seconds  |  1,9 MB    |     | 341.25 MB    | ~ 324 seconds  | 2.0 MB     |
-| 10000  / 20       |     | 42,00   MB     | ~ 7    seconds  |  826 KB    |     | 153.5  MB    | ~ 130 seconds  | 816 KB     |
-| 10000  / 100      |     | 217,00  MB     | ~ 41   seconds  |  4,9 MB    |     | 651.0  MB    | ~ 744 seconds  | 4,0 MB     |
-| 50000  / 20       |     | 229.25  MB     | ~ 37   seconds  |  4,0 MB    |     | 736 MB       | ~ 763 seconds  | 4,1 MB     |
-| 50000  / 100      |     | 1022.75 MB     | ~ 213  seconds  | 19.3 MB    |     | > 2,7 GB     | > 70  minutes  | ?          |
+|                   |     | **Excellence** |           |            |     | **PHPExcel** |           |            |
+| ----------------- | --- | -------------: | --------: | ---------: | --- |-----------:  | --------: | ---------: |
+| *Lines/Columns*   |     | *Memory*       | *Time*    | *Filesize* |     | *Memory*     | *Time*    | *Filesize* |
+| 1000   / 20       |     | 5,25    MB     | ~ 0,7 sec |   87 KB    |     | 21.5   MB    | ~ 12  sec | 88  KB     |
+| 1000   / 100      |     | 20.25   MB     | ~ 4,7 sec |  402 KB    |     | 80.0   MB    | ~ 60  sec | 263 KB     |
+| 5000   / 20       |     | 21,50   MB     | ~ 4   sec |  416 KB    |     | 81.75  MB    | ~ 58  sec | 412 KB     |
+| 5000   / 100      |     | 109,00  MB     | ~ 20  sec |  1,9 MB    |     | 341.25 MB    | ~ 324 sec | 2.0 MB     |
+| 10000  / 20       |     | 42,00   MB     | ~ 7   sec |  826 KB    |     | 153.5  MB    | ~ 130 sec | 816 KB     |
+| 10000  / 100      |     | 217,00  MB     | ~ 41  sec |  4,9 MB    |     | 651.0  MB    | ~ 744 sec | 4,0 MB     |
+| 50000  / 20       |     | 229.25  MB     | ~ 37  sec |  4,0 MB    |     | 736 MB       | ~ 763 sec | 4,1 MB     |
+| 50000  / 100      |     | 1022.75 MB     | ~ 213 sec | 19.3 MB    |     | > 2,7 GB     | > 70  min | ?          |
 
 ## Usage
 
