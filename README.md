@@ -28,7 +28,7 @@ Excel Table looks like this one:
 
 |                   |     | **Excellence** |                 |            |     | **PHPExcel** |                |            |
 | ----------------- | --- | -------------: | --------------: | ---------: | --- |-----------:  | -------------: | ---------: |
-| *Lines / Columns* |     | *Memory*       | *Time*          | *Filesize* |     | *Memory*     | *Time*         | *Filesize* |
+| *Lines/Columns*   |     | *Memory*       | *Time*          | *Filesize* |     | *Memory*     | *Time*         | *Filesize* |
 | 1000   / 20       |     | 5,25    MB     | ~ 0,7  seconds  |   87 KB    |     | 21.5   MB    | ~ 12  seconds  | 88  KB     |
 | 1000   / 100      |     | 20.25   MB     | ~ 4,7  seconds  |  402 KB    |     | 80.0   MB    | ~ 60  seconds  | 263 KB     |
 | 5000   / 20       |     | 21,50   MB     | ~ 4    seconds  |  416 KB    |     | 81.75  MB    | ~ 58  seconds  | 412 KB     |
