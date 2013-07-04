@@ -14,21 +14,23 @@ $oWorkbook = new \Excellence\Workbook('identifier', $oWorkBookDelegate);
 
 ## Function reference
 
-Workbook **__construct** ( string *$sIdentifier* )
-Will create an instance of Workbook with given identifier.
+* Workbook **__construct** ( string *$sIdentifier* )
 
-* DataDelegate **getDelegate** ( *void* )
-Will return defined workbook delegate instance.
+  Will return defined workbook delegate instance.
 
 * string **getIdentifier** ( *void* )
-Will return defined identifier string.
+
+  Will return defined identifier string.
 
 * string **getCoordinatesByColumnAndRow** ( int *$iColumn*, int|null *$iRow = null* )
-Will return a coordinate string in Excel format. If *$iRow* is null, only the letter
-for a specific column will be returned. (A1)
+
+  Will return a coordinate string in Excel format. If *$iRow* is null, only the letter
+  for a specific column will be returned. (A1)
 
 * Workbook **create** ( *void* )
-This method create data structure for Excel document.
+
+  This method create data structure for Excel document.
 
 * Workbook **save** ( string *$sFilename*)
-will save an Excel document to file by given filename.
+
+  will save an Excel document to file by given filename.
