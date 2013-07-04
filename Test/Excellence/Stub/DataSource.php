@@ -70,12 +70,15 @@ class DataSource implements WorkbookDelegate, DataDelegate {
 		$this->aData['sheet1'][0][] = 'row1col1';
 		$this->aData['sheet1'][0][] = 42;
 		$this->aData['sheet1'][0][] = 42.34;
+		$this->aData['sheet1'][0][] = true;
 		$this->aData['sheet1'][1][] = 'row2col1';
 		$this->aData['sheet1'][1][] = 42;
 		$this->aData['sheet1'][1][] = 42.34;
+		$this->aData['sheet1'][1][] = false;
 		$this->aData['sheet1'][2][] = 'row3col1';
 		$this->aData['sheet1'][2][] = 42;
 		$this->aData['sheet1'][2][] = 42.34;
+		$this->aData['sheet1'][2][] = true;
 		$this->aData['sheet1'][3][1] = '=SUM(B1:B3)';
 		$this->aData['sheet1'][3][2] = '=SUM(C1:C3)';
 

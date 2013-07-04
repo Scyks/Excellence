@@ -268,16 +268,6 @@ class Workbook {
 				// get value for cell
 				$value = $oDataSource->valueForRowAndColumn($this, $oSheet, $iRow, $iColumn);
 
-				if (null === $value) continue;
-
-				// value type
-				$iType = gettype($value);
-
-				// make sure we get an allowed data type
-				if (!in_array($iType, array('string', 'integer', 'float', 'double'))) {
-					throw new \LogicException(sprintf('DataDelegate::valueForRowAndColumn have to return a string, float, double or int value, "%s" given.', $iType));
-				}
-
 				// Excel coordinate
 				$sCord = $this->getCoordinatesByColumnAndRow($iColumn, $iRow + 1);
 
@@ -291,7 +281,19 @@ class Workbook {
 					$sDimensionTo = $sCord;
 				}
 
-				// determine value type
+				// return if value is empty
+				if (null === $value) continue;
+
+				// value type
+				$iType = gettype($value);
+
+				// make sure we get an allowed data type
+				if (!in_array($iType, array('string', 'integer', 'float', 'double', 'boolean'))) {
+					throw new \LogicException(sprintf('DataDelegate::valueForRowAndColumn have to return a string, float, double or int value, "%s" given.', $iType));
+				}
+
+
+				// function or formula
 				if ('string' == $iType && '=' == substr($value, 0, 1)) {
 
 					// add value to calchain
@@ -300,11 +302,20 @@ class Workbook {
 					// add value to column
 					$sWorkbook .= '<c r="' . $sCord . '"><f>' . substr($value, 1) . '</f></c>';
 
+				// string
 				} elseif('string' == $iType) {
 					$iNum = $this->addValueToSharedStrings($value);
 
 					// add value to column
 					$sWorkbook .= '<c r="' . $sCord . '" t="s"><v>' . $iNum . '</v></c>';
+
+				// boolean
+				} elseif ('boolean' == $iType) {
+
+					// add value to column
+					$sWorkbook .= '<c r="' . $sCord . '" t="b"><v>' . (int) $value . '</v></c>';
+
+				// number
 				} else {
 
 					// add value to column

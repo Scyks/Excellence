@@ -105,9 +105,7 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 	 */
 	public function dataProviderInvalidValuesForCell() {
 		return array(
-			array(true),
 			array(array()),
-			array(false),
 		);
 	}
 
@@ -259,7 +257,7 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 	 * @expectedException \LogicException
 	 * @expectedExceptionMessage WorkbookDelegate::dataSourceForWorkbookAndSheet have to return an instance of \Excellence\Delegates\DataSource, "NULL" given.
 	 */
-	public function create_DelegateDataSourceForWorkbookAndSheetReturnsNoInstaceOfDataSource_throwsException() {
+	public function create_DelegateDataSourceForWorkbookAndSheetReturnsNoInstanceOfDataSource_throwsException() {
 		$oMock = $this->getMock('\Test\Excellence\Stub\DataSource', array('dataSourceForWorkbookAndSheet'));
 		$oMock
 			->expects($this->any())
@@ -334,7 +332,7 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 
 		$sCompareXml = '<?xml version="1.0" encoding="UTF-8"?>'
 		. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
-			. '<dimension ref="A1:C4"/>'
+			. '<dimension ref="A1:D4"/>'
 			. '<sheetViews>'
 				. '<sheetView tabSelected="1" workbookViewId="0"/>'
 			. '</sheetViews>'
@@ -343,16 +341,19 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 					. '<c r="A1" t="s"><v>0</v></c>'
 					. '<c r="B1" t="n"><v>42</v></c>'
 					. '<c r="C1" t="n"><v>42.34</v></c>'
+					. '<c r="D1" t="b"><v>1</v></c>'
 				. '</row>'
 				. '<row r="2">'
 					. '<c r="A2" t="s"><v>1</v></c>'
 					. '<c r="B2" t="n"><v>42</v></c>'
 					. '<c r="C2" t="n"><v>42.34</v></c>'
+					. '<c r="D2" t="b"><v>0</v></c>'
 				. '</row>'
 				. '<row r="3">'
 					. '<c r="A3" t="s"><v>2</v></c>'
 					. '<c r="B3" t="n"><v>42</v></c>'
 					. '<c r="C3" t="n"><v>42.34</v></c>'
+					. '<c r="D3" t="b"><v>1</v></c>'
 				. '</row>'
 				. '<row r="4">'
 					. '<c r="B4"><f>SUM(B1:B3)</f></c>'
