@@ -8,16 +8,16 @@ Excellence is providing interfaces that you have to implement. There are `WorkBo
 
 ### Classes / Objects
 
-[Workbook Class](workbook.md)
-[Sheet Class](sheet.md)
+* [Workbook Class](workbook.md)
+* [Sheet Class](sheet.md)
 
 ### Delegates
 
-[Workbook Delegate](Delegates/workbookDelegate.md)
-[Data Delegate](Delegates/dataDelegate.md)
-[Mergeeable Delegate](Delegates/mergeableDelegate.md)
+* [Workbook Delegate](Delegates/workbookDelegate.md)
+* [Data Delegate](Delegates/dataDelegate.md)
+* [Mergeeable Delegate](Delegates/mergeableDelegate.md)
 
 ### Functional
 
-[Example implementation](example.md)
-[Cell merging](cell-merging.d)
+* [Example implementation](example.md)
+* [Cell merging](cell-merging.d)

@@ -5,7 +5,7 @@ This library will only support _xlsx_ (OfficeOpenXml format) files.
 
 __Library is currently under development__
 
-[Documentation](Documentation/index.md)
+[Documentation](Documentation/markdown/index.md)
 
 ## Roadmap
 
