@@ -7,9 +7,30 @@ __Library is currently under development__
 
 [Documentation](Documentation/markdown/index.md)
 
-## Roadmap
+## Requirements
 
-* Styles (border, color, font, size, padding ... )
+* PHP Version 5.3.0 or higher
+* PHP extension php_zip enabled
+
+## Installation
+
+# Source from github
+
+You can just download the source via github and manage it by yourself.
+`git clone https://github.com/Scyks/Excellence`
+
+### Composer
+
+To add Excellence as a dependency to your project, just add a dependency on
+scyks/excellence to your composer.json file.
+
+```
+{
+    "require": {
+        "scyks/excellence": "dev-master"
+    }
+}
+```
 
 ## Performance Tests against PHPExcel library
 

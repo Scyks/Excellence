@@ -5,7 +5,6 @@
 Excellence is based on [Delegation Pattern](http://www.blog.newventurewebsites.com/delegate-design-pattern-in-php/).
 Excellence is providing interfaces that you have to implement. There are `WorkBookDelegate` and `DataDelegate` Interfaces.
 
-
 ### Classes / Objects
 
 * [Workbook Class](workbook.md)
@@ -21,3 +20,7 @@ Excellence is providing interfaces that you have to implement. There are `WorkBo
 
 * [Example implementation](example.md)
 * [Cell merging](cell-merging.d)
+
+## Roadmap
+
+* Styles (border, color, font, size, padding ... )

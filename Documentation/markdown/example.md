@@ -109,6 +109,6 @@ class myDataSource implements DataDelegate {
 $oWorkbook  =new Workbook('myWorkbook', new MyWorkbook());
 $oWorkbook
 	->create()
-	->save('foobar.xmls')
+	->save('foobar.xlsx')
 ;
 ```
