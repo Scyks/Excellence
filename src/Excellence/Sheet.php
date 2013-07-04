@@ -74,8 +74,8 @@ class Sheet {
 	public function __construct($sIdentifier, $sName = null) {
 
 		// make sure identifier isn't empty
-		if(empty($sIdentifier)) {
-			throw new \InvalidArgumentException('Sheet identifier have to be a non empty string value.');
+		if(!preg_match('/^[a-z0-9_-]+$/i', $sIdentifier)) {
+			throw new \InvalidArgumentException('Sheet identifier does only contain following signs (a-z, 0-9, _, -).');
 		}
 
 		// set name to null if empty
@@ -107,6 +107,14 @@ class Sheet {
 	 */
 	public function getName() {
 		return $this->sName;
+	}
+
+	/**
+	 * check if a sheet has a name defined
+	 * @return bool
+	 */
+	public function hasName() {
+		return (0 < strlen($this->sName));
 	}
 
 }

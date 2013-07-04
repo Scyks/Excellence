@@ -170,6 +170,19 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 		$this->assertSame('workbook', $oWorkBook->getIdentifier());
 	}
 
+#pragma mark - delegate
+
+	/**
+	 * @test
+	 * @group Workbook
+	 */
+	public function getDelegate_delegateDefined_ReturnsDelegate() {
+		$oDelegate = $this->makeDelegate();
+		$oWorkBook = $this->makeWorkbook('id', $oDelegate);
+
+		$this->assertSame($oDelegate, $oWorkBook->getDelegate());
+	}
+
 #pragma mark - create
 
 	/**

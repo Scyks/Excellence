@@ -122,6 +122,17 @@ class Workbook {
 		$this->oDelegate = $oDelegate;
 	}
 
+#pragma mark - delegation
+
+	/**
+	 * return defined delegate object
+	 *
+	 * @return WorkbookDelegate
+	 */
+	public function getDelegate() {
+		return $this->oDelegate;
+	}
+
 #pragma mark - identifier
 
 	/**
@@ -145,7 +156,7 @@ class Workbook {
 	public function create() {
 
 		// get number of sheets from delegate
-		$this->iSheets = (int) $this->oDelegate->numberOfSheetsInWorkbook($this);
+		$this->iSheets = (int) $this->getDelegate()->numberOfSheetsInWorkbook($this);
 
 		// make sure that there is minimum one sheet
 		if (0 >= $this->iSheets) {
@@ -178,7 +189,7 @@ class Workbook {
 		for($iSheet = 0; $iSheet < $this->iSheets; $iSheet++) {
 
 			/** @var Sheet $oSheet */
-			$oSheet = $this->oDelegate->getSheetForWorkBook($this, $iSheet);
+			$oSheet = $this->getDelegate()->getSheetForWorkBook($this, $iSheet);
 
 			// make sure that oSheet is instanceof sheet
 			if (!$oSheet instanceof Sheet) {
@@ -187,7 +198,7 @@ class Workbook {
 
 			$this->aSheets[] = $oSheet;
 
-			$this->sWorkbook .= '<sheet name="' . $oSheet->getName() . '" sheetId="' . ($iSheet + 1) . '" r:id="rId' . ($iSheet + 1) . '"/>';
+			$this->sWorkbook .= '<sheet name="' . (($oSheet->hasName()) ? $oSheet->getName() : 'Sheet ' . ($iSheet + 1)) . '" sheetId="' . ($iSheet + 1) . '" r:id="rId' . ($iSheet + 1) . '"/>';
 
 			// create sheet data by sheet
 			$this->createSheetDataXml($oSheet, $iSheet + 1);
@@ -209,7 +220,7 @@ class Workbook {
 	private function createSheetDataXml(Sheet $oSheet, $iSheet) {
 
 		/** @var DataDelegate $oDataSource */
-		$oDataSource = $this->oDelegate->dataSourceForWorkbookAndSheet($this, $oSheet);
+		$oDataSource = $this->getDelegate()->dataSourceForWorkbookAndSheet($this, $oSheet);
 
 		if (!$oDataSource instanceof DataDelegate) {
 			throw new \LogicException('WorkbookDelegate::dataSourceForWorkbookAndSheet have to return an instance of \Excellence\Delegates\DataSource, "NULL" given.');
@@ -411,6 +422,9 @@ class Workbook {
 		// add shared strings
 		if (!empty($this->aSharedStrings)) {
 			$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'sharedStrings.xml', $this->sharedStrings());
+		} else {
+			echo 'no shared strings';
+			print_r($this->aSharedStrings);
 		}
 
 		// add styles

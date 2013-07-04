@@ -53,16 +53,31 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 		return new Sheet($sIdentifier, $sName);
 	}
 
+#pragma mark - dataProvider
+
+	public function dataProviderIllegalIds() {
+		return array(
+			array('foo bar'),
+			array('foo/&%$§'),
+			array('foo:'),
+			array(':bar:'),
+			array(':bar:'),
+			array(':bar<'),
+			array(''),
+		);
+	}
+
 #pragma mark - construction
 
 	/**
 	 * @test
 	 * @group Sheet
+	 * @dataProvider dataProviderIllegalIds
 	 * @expectedException \InvalidArgumentException
-	 * @expectedExceptionMessage Sheet identifier have to be a non empty string value.
+	 * @expectedExceptionMessage Sheet identifier does only contain following signs (a-z, 0-9, _, -).
 	 */
-	public function __construct_provideEmptyIdentifier_throwsException() {
-		$this->makeSheet('');
+	public function __construct_IllegalIdentifiers_throwsException($sId) {
+		$this->makeSheet($sId);
 	}
 
 
@@ -171,6 +186,45 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 	public function getName_constructionIdentifier_returnsSheet() {
 		$oSheet = $this->makeSheet('scheet', 'Foobar');
 		$this->assertSame('Foobar', $oSheet->getName());
+	}
+
+#pragma mark - hasName
+
+
+	/**
+	 * @test
+	 * @group Sheet
+	 */
+	public function hasName_noNameProvided_returnsFalse() {
+
+		$oSheet = $this->makeSheet();
+		$this->assertFalse($oSheet->hasName());
+	}
+
+	/**
+	 * @test
+	 * @group Sheet
+	 */
+	public function hasName_modifiedIdentifierVariable_returnsFoobar() {
+
+		$oSheet = $this->makeSheet();
+
+		$oReflectionClass = new \ReflectionClass($oSheet);
+
+		$oProperty = $oReflectionClass->getProperty('sName');
+		$oProperty->setAccessible(true);
+		$oProperty->setValue($oSheet, 'foobar');
+
+		$this->assertTrue($oSheet->hasName());
+	}
+
+	/**
+	 * @test
+	 * @group Sheet
+	 */
+	public function hasName_constructionIdentifier_returnsSheet() {
+		$oSheet = $this->makeSheet('scheet', 'Foobar');
+		$this->assertTrue($oSheet->hasName());
 	}
 
 }
