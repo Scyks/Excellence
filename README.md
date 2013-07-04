@@ -14,7 +14,7 @@ __Library is currently under development__
 
 ## Installation
 
-# Source from github
+### Source from github
 
 You can just download the source via github and manage it by yourself.
 `git clone https://github.com/Scyks/Excellence`
