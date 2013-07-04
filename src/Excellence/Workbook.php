@@ -38,6 +38,7 @@
 namespace Excellence;
 
 use Excellence\Delegates\DataDelegate;
+use Excellence\Delegates\MergeableDelegate;
 use Excellence\Delegates\WorkbookDelegate;
 use Excellence\Sheet;
 
@@ -145,6 +146,33 @@ class Workbook {
 		return $this->sIdentifier;
 	}
 
+#pragma mark - coordinates
+
+	/**
+	 * calculate by given column and row index the Excel coordinate.
+	 * This method is inspired by an Answer of stackoverflow.
+	 *
+	 * @see http://stackoverflow.com/questions/3302857/algorithm-to-get-the-excel-like-column-name-of-a-number
+	 * @param integer$iColumn
+	 * @param integer $iRow
+	 *
+	 * @return string
+	 */
+	public function getCoordinatesByColumnAndRow($iColumn, $iRow = null) {
+
+		for($sReturn = ""; $iColumn >= 0; $iColumn = intval($iColumn / 26) - 1) {
+			$sReturn = chr($iColumn%26 + 0x41) . $sReturn;
+		}
+
+		// if there is no row, only the letter will returned
+		if (null === $iRow) {
+			return $sReturn;
+		}
+
+		return $sReturn . $iRow;
+
+	}
+
 #pragma mark - data handling
 
 	/**
@@ -241,27 +269,23 @@ class Workbook {
 			throw new \LogicException('DataDelegate::numberOfColumnsInSheet have to return an integer value bigger than zero.');
 		}
 
-
-		// Dimension Vars
-		$sDimensionFrom = null;
-		$sDimensionTo = null;
-
 		// create workbook xml
-		$sWorkbook = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
-		. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
-			. '<dimension ref="%s"/>'
+		$this->aSheetData[$oSheet->getIdentifier()] = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+			. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
+			// formally at this position is a dimension tag, but Excel don't need it <dimension ref="A1:B2"/>
 			. '<sheetViews>'
 				. '<sheetView tabSelected="1" workbookViewId="0"/>'
 			. '</sheetViews>'
 			.'<sheetData>'
 		;
 
+		$sMerge = '';
 
 		// sheet loop
 		for($iRow = 0; $iRow < $iRows; $iRow++) {
 
 			// create row
-			$sWorkbook .= '<row r="' . ($iRow + 1) . '">';
+			$this->aSheetData[$oSheet->getIdentifier()] .= '<row r="' . ($iRow + 1) . '">';
 
 			for($iColumn = 0; $iColumn < $iColumns; $iColumn++) {
 
@@ -270,16 +294,6 @@ class Workbook {
 
 				// Excel coordinate
 				$sCord = $this->getCoordinatesByColumnAndRow($iColumn, $iRow + 1);
-
-				// set start dimension
-				if (null == $sDimensionFrom) {
-					$sDimensionFrom = $sCord;
-				}
-
-				// set end dimension
-				if (null == $sDimensionTo || $sDimensionTo < $sCord) {
-					$sDimensionTo = $sCord;
-				}
 
 				// return if value is empty
 				if (null === $value) continue;
@@ -292,6 +306,26 @@ class Workbook {
 					throw new \LogicException(sprintf('DataDelegate::valueForRowAndColumn have to return a string, float, double or int value, "%s" given.', $iType));
 				}
 
+				// check if data source implements mergeable delegate
+				if ($this->getDelegate() instanceof MergeableDelegate) {
+
+					// get merge range
+					$sMergeRange = $this->getDelegate()->mergeByColumnAndRow($this, $iColumn, $iRow);
+
+					// continue only if mergeRange is a string
+					if (true == is_string($sMergeRange)) {
+
+						// make sure this is upper cased
+						$sMergeRange = strtoupper($sMergeRange);
+
+						// check if merge range equals correct format
+						if (!preg_match('/^[A-Z]+[0-9]+:[A-Z]+[0-9]$/', $sMergeRange)) {
+							throw new \InvalidArgumentException('MergeableDelegate::mergeByColumnAndRow have to return a merge range as string in format "A1:A2"');
+						}
+
+						$sMerge .= '<mergeCell ref="' . $sMergeRange . '"/>';
+					}
+				}
 
 				// function or formula
 				if ('string' == $iType && '=' == substr($value, 0, 1)) {
@@ -300,56 +334,42 @@ class Workbook {
 					$this->addColumnToCalcChain($sCord, $iSheet);
 
 					// add value to column
-					$sWorkbook .= '<c r="' . $sCord . '"><f>' . substr($value, 1) . '</f></c>';
+					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '"><f>' . substr($value, 1) . '</f></c>';
 
 				// string
 				} elseif('string' == $iType) {
 					$iNum = $this->addValueToSharedStrings($value);
 
 					// add value to column
-					$sWorkbook .= '<c r="' . $sCord . '" t="s"><v>' . $iNum . '</v></c>';
+					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="s"><v>' . $iNum . '</v></c>';
 
 				// boolean
 				} elseif ('boolean' == $iType) {
 
 					// add value to column
-					$sWorkbook .= '<c r="' . $sCord . '" t="b"><v>' . (int) $value . '</v></c>';
+					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="b"><v>' . (int) $value . '</v></c>';
 
 				// number
 				} else {
 
 					// add value to column
-					$sWorkbook .= '<c r="' . $sCord . '" t="n"><v>' . $value . '</v></c>';
+					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="n"><v>' . $value . '</v></c>';
 				}
 
 				// add column to row
 			}
 
-			$sWorkbook .= '</row>';
+			$this->aSheetData[$oSheet->getIdentifier()] .= '</row>';
 		}
 
-		$sWorkbook .= '</sheetData></worksheet>';
+		$this->aSheetData[$oSheet->getIdentifier()] .= '</sheetData>';
 
-		$this->aSheetData[$oSheet->getIdentifier()] = sprintf($sWorkbook, $sDimensionFrom . ':' . $sDimensionTo);
-	}
-
-	/**
-	 * calculate by given column and row index the Excel coordinate.
-	 * This method is inspired by an Answer of stackoverflow.
-	 *
-	 * @see http://stackoverflow.com/questions/3302857/algorithm-to-get-the-excel-like-column-name-of-a-number
-	 * @param integer$iColumn
-	 * @param integer $iRow
-	 *
-	 * @return string
-	 */
-	private function getCoordinatesByColumnAndRow($iColumn, $iRow) {
-
-		for($sReturn = ""; $iColumn >= 0; $iColumn = intval($iColumn / 26) - 1) {
-			$sReturn = chr($iColumn%26 + 0x41) . $sReturn;
+		// merged cells
+		if (0 < strlen($sMerge)) {
+			$this->aSheetData[$oSheet->getIdentifier()] .= '<mergeCells>' . $sMerge . '</mergeCells>';
 		}
 
-		return $sReturn . $iRow;
+		$this->aSheetData[$oSheet->getIdentifier()] .= '</worksheet>';
 
 	}
 
@@ -425,17 +445,15 @@ class Workbook {
 		// add workbook relations
 		$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . '_rels' . DIRECTORY_SEPARATOR . 'workbook.xml.rels', $this->workbookRelations());
 
+		/** Calc chain is not needed ... */
 		// add Calc chain if exists
-		if (!empty($this->sCalcChain)) {
-			$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'calcChain.xml', $this->calcChain());
-		}
+//		if (!empty($this->sCalcChain)) {
+//			$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'calcChain.xml', $this->calcChain());
+//		}
 
 		// add shared strings
 		if (!empty($this->aSharedStrings)) {
 			$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'sharedStrings.xml', $this->sharedStrings());
-		} else {
-			echo 'no shared strings';
-			print_r($this->aSharedStrings);
 		}
 
 		// add styles
@@ -487,8 +505,9 @@ class Workbook {
 			// add shared strings if exists
 			. ((!empty($this->aSharedStrings)) ? '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>' : '')
 
+			/** Calc chain is not needed ... */
 			// add calc chain if exists
-			. ((!empty($this->sCalcChain)) ? '<Override PartName="/xl/calcChain.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml"/>' : '')
+//			. ((!empty($this->sCalcChain)) ? '<Override PartName="/xl/calcChain.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml"/>' : '')
 
 			. '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>'
 			. '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>'
@@ -610,11 +629,12 @@ class Workbook {
 			$iId ++;
 		}
 
+		/** Calc chain is not needed ... */
 		// add calc chain
-		if (!empty($this->sCalcChain)) {
-			$sSheets .= sprintf('<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain" Target="calcChain.xml"/>', $iId);
-			$iId++;
-		}
+//		if (!empty($this->sCalcChain)) {
+//			$sSheets .= sprintf('<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/calcChain" Target="calcChain.xml"/>', $iId);
+//			$iId++;
+//		}
 
 		// add Shared Strings
 		if (!empty($this->aSharedStrings)) {

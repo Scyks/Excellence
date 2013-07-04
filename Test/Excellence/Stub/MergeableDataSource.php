@@ -37,8 +37,8 @@
 
 namespace Test\Excellence\Stub;
 
-use \Excellence\Delegates\WorkbookDelegate;
-use \Excellence\Delegates\DataDelegate;
+use Excellence\Delegates\MergeableDelegate;
+use Excellence\Delegates\WorkbookDelegate;
 use \Excellence\Workbook;
 use \Excellence\Sheet;
 
@@ -46,17 +46,7 @@ use \Excellence\Sheet;
  * Stub Data Source for Tests
  * @package Test\Excellence\Stub
  */
-class PerformanceDataSource extends DataSource implements WorkbookDelegate, DataDelegate {
-
-	function cord($iColumn, $iRow) {
-
-		for($sReturn = ""; $iColumn >= 0; $iColumn = intval($iColumn / 26) - 1) {
-			$sReturn = chr($iColumn%26 + 0x41) . $sReturn;
-		}
-
-		return $sReturn . $iRow;
-
-	}
+class MergeableDataSource extends DataSource implements MergeableDelegate, WorkbookDelegate {
 
 	/**
 	 * construction - load data
@@ -64,19 +54,44 @@ class PerformanceDataSource extends DataSource implements WorkbookDelegate, Data
 	public function __construct() {
 		$this->aSheets[] = new Sheet('sheet1', 'Sheet 1');
 
-		for ($iRow = 0; $iRow < 100; $iRow++) {
-			for ($iColumn = 0; $iColumn < 20; $iColumn += 4) {
+		$this->aData['sheet1'][0][] = 'row1col1';	// A0
+		$this->aData['sheet1'][0][] = 'B1:C1';		// B0
+		$this->aData['sheet1'][1][] = 'row2col1';	// A1
+		$this->aData['sheet1'][1][] = 'B2:C3';		// B1
+		$this->aData['sheet1'][2][] = 'row3col1';	// A2
+		$this->aData['sheet1'][3][] = 'A4:A5';		// A3
 
-				$this->aData['sheet1'][$iRow][$iColumn] = 'test column value';
-				$this->aData['sheet1'][$iRow][$iColumn+1] = 22;
-				$this->aData['sheet1'][$iRow][$iColumn+2] = 0.9;
-				$this->aData['sheet1'][$iRow][$iColumn+3] = '=SUM(' . $this->cord($iColumn+1, $iRow+1) . ':' . $this->cord($iColumn+2, $iRow+1) . ')';
-			}
+	}
 
+#pragma mark - MergeableDelegate implementation
+
+	/**
+	 * Returns a string merge definition as string. A merge string will
+	 * contain two cell coordinates separated by a colon. Workbook's API
+	 * provide a method to retrieve a cell coordinate by column and row.
+	 *
+	 * - Workbook::getCoordinatesByColumnAndRow(int $iColumn, int $iRow)
+	 *
+	 * Format examples:
+	 * - A1:B1
+	 * - A1:B2
+	 *
+	 * @param Workbook $oWorkbook
+	 * @param int $iColumn
+	 * @param int $iRow
+	 *
+	 * @return string
+	 */
+	public function mergeByColumnAndRow(Workbook $oWorkbook, $iColumn, $iRow) {
+		if (1 == $iColumn && 0 == $iRow) {
+			return 'B1:C1';
+		} elseif (1 == $iColumn && 1 == $iRow) {
+			return 'B2:C3';
+		} elseif (0 == $iColumn && 3 == $iRow) {
+			return 'A3:A4';
 		}
 
-		//echo $iRow . ' / ' . $iColumn . "\n";
-
+		return null;
 	}
 
 }

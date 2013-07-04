@@ -36,9 +36,11 @@
  */
 
 namespace Test\Excellence;
+
 use Excellence\Workbook;
 use Test\Excellence\Stub\DataSource;
 use Excellence\Delegates\WorkbookDelegate;
+use Test\Excellence\Stub\MergeableDataSource;
 
 class WorkbookTest extends \PHPUnit_Framework_TestCase {
 
@@ -75,6 +77,13 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 		return new DataSource();
 	}
 
+	/**
+	 * @return MergableDataSource
+	 */
+	public function makeMergeDelegate() {
+		return new MergeableDataSource();
+	}
+
 
 #pragma mark - dataProvider
 
@@ -106,6 +115,23 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 	public function dataProviderInvalidValuesForCell() {
 		return array(
 			array(array()),
+		);
+	}
+
+	/**
+	 * data provider that returns column and row number and result cord
+	 *
+	 * @return array
+	 */
+	public function dataProviderCellCoordinates() {
+		return array(
+			array(0, 1, 'A1'),
+			array(0, 2, 'A2'),
+			array(1, 1, 'B1'),
+			array(27, 1, 'AB1'),
+			array(27, 11, 'AB11'),
+			array(1260, 1, 'AVM1'),
+			array(16383 , 1, 'XFD1'),
 		);
 	}
 
@@ -179,6 +205,29 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 		$oWorkBook = $this->makeWorkbook('id', $oDelegate);
 
 		$this->assertSame($oDelegate, $oWorkBook->getDelegate());
+	}
+
+#pragma mark - coordinates
+
+	/**
+	 * @test
+	 * @group Workbook
+	 * @dataProvider dataProviderCellCoordinates
+	 */
+	public function getCoordinatesByColumnAndRow_givenData_ReturnsCoordinate($iColumn, $iRow, $sEquals) {
+		$oWorkbook = $this->makeWorkbook();
+
+		$this->assertSame($sEquals, $oWorkbook->getCoordinatesByColumnAndRow($iColumn, $iRow));
+	}
+
+	/**
+	 * @test
+	 * @group Workbook
+	 */
+	public function getCoordinatesByColumnAndRow_noRow_returnOnlyLetter() {
+		$oWorkbook = $this->makeWorkbook();
+
+		$this->assertSame('B', $oWorkbook->getCoordinatesByColumnAndRow(1));
 	}
 
 #pragma mark - create
@@ -332,7 +381,6 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 
 		$sCompareXml = '<?xml version="1.0" encoding="UTF-8"?>'
 		. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
-			. '<dimension ref="A1:D4"/>'
 			. '<sheetViews>'
 				. '<sheetView tabSelected="1" workbookViewId="0"/>'
 			. '</sheetViews>'
@@ -373,6 +421,75 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 
 		$this->assertXmlStringEqualsXmlString($aSheets['sheet1'], $sCompareXml);
 		$this->assertXmlStringEqualsXmlString($aSheets['sheet2'], $sCompareXml);
+	}
+
+	/**
+	 * @test
+	 * @group Workbook
+	 * @expectedException \InvalidArgumentException
+	 * @expectedExceptionMessage MergeableDelegate::mergeByColumnAndRow have to return a merge range as string in format "A1:A2"
+	 */
+	public function create_createMergeableReturnWrongMergeRange_throwsException() {
+
+		$oMock = $this->getMock('\Test\Excellence\Stub\MergeableDataSource', array('mergeByColumnAndRow'));
+		$oMock
+			->expects($this->any())
+			->method('mergeByColumnAndRow')
+			->will($this->returnValue('foobar'))
+		;
+		$oWorkbook = $this->makeWorkbook('merge', $oMock);
+
+		$oWorkbook->create();
+
+	}
+
+	/**
+	 * @test
+	 * @group Workbook
+	 */
+	public function create_createMergeableSheetDataXml_ScheetDataXmlCreated() {
+
+		$oDataSource = $this->makeMergeDelegate();
+		$oWorkbook = $this->makeWorkbook('merge', $oDataSource);
+
+		$sCompareXml = '<?xml version="1.0" encoding="UTF-8"?>'
+		. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
+			. '<sheetViews>'
+				. '<sheetView tabSelected="1" workbookViewId="0"/>'
+			. '</sheetViews>'
+			. '<sheetData>'
+				. '<row r="1">'
+					. '<c r="A1" t="s"><v>0</v></c>'
+					. '<c r="B1" t="s"><v>1</v></c>'
+				. '</row>'
+				. '<row r="2">'
+					. '<c r="A2" t="s"><v>2</v></c>'
+					. '<c r="B2" t="s"><v>3</v></c>'
+				. '</row>'
+				. '<row r="3">'
+					. '<c r="A3" t="s"><v>4</v></c>'
+				. '</row>'
+				. '<row r="4">'
+					. '<c r="A4" t="s"><v>5</v></c>'
+				. '</row>'
+			. '</sheetData>'
+			. '<mergeCells>'
+				. '<mergeCell ref="B1:C1"/>'
+				. '<mergeCell ref="B2:C3"/>'
+				. '<mergeCell ref="A3:A4"/>'
+			. '</mergeCells>'
+		. '</worksheet>'
+		;
+
+
+		$oWorkbook->create();
+
+		$oReflection = new \ReflectionClass($oWorkbook);
+		$oSheetData = $oReflection->getProperty('aSheetData');
+		$oSheetData->setAccessible(true);
+		$aSheets = $oSheetData->getValue($oWorkbook);
+
+		$this->assertXmlStringEqualsXmlString($aSheets['sheet1'], $sCompareXml);
 	}
 
 	/**
@@ -447,7 +564,7 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 			->save($sFilename)
 		;
 
-		$this->assertLessThan(0.36, (microtime(true)-$iTime));
+		$this->assertLessThan(0.1, (microtime(true)-$iTime));
 
 	}
 }

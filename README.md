@@ -7,7 +7,7 @@ __Library is currently under development__
 
 ## Roadmap
 
-* Cell Merging
+* --Cell Merging--
 * Styles (border, color, font, size, padding ... )
 
 ## Performance Tests against PHPExcel library
@@ -29,14 +29,14 @@ Excel Table looks like this one:
 |                   |     | **Excellence** |           |            |     | **PHPExcel** |           |            |
 | ----------------- | --- | -------------: | --------: | ---------: | --- |-----------:  | --------: | ---------: |
 | *Lines/Columns*   |     | *Memory*       | *Time*    | *Filesize* |     | *Memory*     | *Time*    | *Filesize* |
-| 1000   / 20       |     | 5,25    MB     | ~ 0,7 sec |   87 KB    |     | 21.5   MB    | ~ 12  sec | 88  KB     |
-| 1000   / 100      |     | 20.25   MB     | ~ 4,7 sec |  402 KB    |     | 80.0   MB    | ~ 60  sec | 263 KB     |
-| 5000   / 20       |     | 21,50   MB     | ~ 4   sec |  416 KB    |     | 81.75  MB    | ~ 58  sec | 412 KB     |
-| 5000   / 100      |     | 109,00  MB     | ~ 20  sec |  1,9 MB    |     | 341.25 MB    | ~ 324 sec | 2.0 MB     |
-| 10000  / 20       |     | 42,00   MB     | ~ 7   sec |  826 KB    |     | 153.5  MB    | ~ 130 sec | 816 KB     |
-| 10000  / 100      |     | 217,00  MB     | ~ 41  sec |  4,9 MB    |     | 651.0  MB    | ~ 744 sec | 4,0 MB     |
-| 50000  / 20       |     | 229.25  MB     | ~ 37  sec |  4,0 MB    |     | 736 MB       | ~ 763 sec | 4,1 MB     |
-| 50000  / 100      |     | 1022.75 MB     | ~ 213 sec | 19.3 MB    |     | > 2,7 GB     | > 70  min | ?          |
+| 1000   / 20       |     | 4,75    MB     | ~ 0,9 sec |   85  KB   |     | 21.5   MB    | ~ 12  sec | 86   KB    |
+| 5000   / 20       |     | 21,00   MB     | ~ 4,3 sec |  406  KB   |     | 81.75  MB    | ~ 55  sec | 402  KB    |
+| 10000  / 20       |     | 41,00   MB     | ~ 9   sec |  806  KB   |     | 153.5  MB    | ~ 114 sec | 796  KB    |
+| 50000  / 20       |     | 204.00  MB     | ~ 44  sec |  3,8  MB   |     | 736 MB       | ~ 763 sec | 4,1  MB    |
+| 1000   / 100      |     | 19.50   MB     | ~ 5,0 sec |  393  KB   |     | 77.75  MB    | ~ 59  sec | 388  KB    |
+| 5000   / 100      |     | 95,50   MB     | ~ 25 sec  |  1,86 MB   |     | 367.75 MB    | ~ 339 sec | 1,89 MB    |
+| 10000  / 100      |     | 190,75  MB     | ~ 51  sec |  3,7  MB   |     | 651.0  MB    | ~ 744 sec | 4,0  MB    |
+| 50000  / 100      |     | 957.75  MB     | ~ 266 sec | 18.4  MB   |     | > 2,7 GB     | > 70  min | ?          |
 
 ## Usage
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * @author        Ronald Marske <scyks@ceow.de>
- * @filesource    DataSource.php
+ * @filesource    src/Excellence/Delegates/MergeableDelegate.php
  *
  * @copyright     Copyright (c) 2013 Ronald Marske, All rights reserved.
  *
@@ -35,48 +35,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Test\Excellence\Stub;
+namespace Excellence\Delegates;
 
-use \Excellence\Delegates\WorkbookDelegate;
-use \Excellence\Delegates\DataDelegate;
 use \Excellence\Workbook;
-use \Excellence\Sheet;
 
 /**
- * Stub Data Source for Tests
- * @package Test\Excellence\Stub
+ * Mergeable delegate interface provides functionality to
+ * merge cells in an Excel sheet.
+ *
+ * @package Excellence\Delegates
  */
-class PerformanceDataSource extends DataSource implements WorkbookDelegate, DataDelegate {
-
-	function cord($iColumn, $iRow) {
-
-		for($sReturn = ""; $iColumn >= 0; $iColumn = intval($iColumn / 26) - 1) {
-			$sReturn = chr($iColumn%26 + 0x41) . $sReturn;
-		}
-
-		return $sReturn . $iRow;
-
-	}
+interface MergeableDelegate {
 
 	/**
-	 * construction - load data
+	 * Returns a string merge definition as string. A merge string will
+	 * contain two cell coordinates separated by a colon. Workbook's API
+	 * provide a method to retrieve a cell coordinate by column and row.
+	 *
+	 * - Workbook::getCoordinatesByColumnAndRow(int $iColumn, int $iRow)
+	 *
+	 * Format examples:
+	 * - A1:B1
+	 * - A1:B2
+	 *
+	 * @param Workbook $oWorkbook
+	 * @param int $iColumn
+	 * @param int $iRow
+	 *
+	 * @return string
 	 */
-	public function __construct() {
-		$this->aSheets[] = new Sheet('sheet1', 'Sheet 1');
-
-		for ($iRow = 0; $iRow < 100; $iRow++) {
-			for ($iColumn = 0; $iColumn < 20; $iColumn += 4) {
-
-				$this->aData['sheet1'][$iRow][$iColumn] = 'test column value';
-				$this->aData['sheet1'][$iRow][$iColumn+1] = 22;
-				$this->aData['sheet1'][$iRow][$iColumn+2] = 0.9;
-				$this->aData['sheet1'][$iRow][$iColumn+3] = '=SUM(' . $this->cord($iColumn+1, $iRow+1) . ':' . $this->cord($iColumn+2, $iRow+1) . ')';
-			}
-
-		}
-
-		//echo $iRow . ' / ' . $iColumn . "\n";
-
-	}
-
+	public function mergeByColumnAndRow(Workbook $oWorkbook, $iColumn, $iRow);
 }
