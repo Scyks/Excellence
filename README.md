@@ -204,10 +204,10 @@ class MyWorkbook implements WorkbookDelegate, DataDelegate {
 		$this->aSheets[] = new Sheet('sheet2', 'Table 2');
 
 		for ($iRow = 0; $iRow < 10; $iRow++) {
-			$this->aData['sheet1'][$iRow][0] = 'test column value';
-			$this->aData['sheet1'][$iRow][1] = 22;
-			$this->aData['sheet1'][$iRow][2] = 0.9;
-			$this->aData['sheet1'][$iRow][3] = '=SUM(B1:C1)';
+			$this->aData['sheet2'][$iRow][0] = 'test column value';
+			$this->aData['sheet2'][$iRow][1] = 22;
+			$this->aData['sheet2'][$iRow][2] = 0.9;
+			$this->aData['sheet2'][$iRow][3] = '=SUM(B1:C1)';
 		}
 	}
 
@@ -229,7 +229,7 @@ class MyWorkbook implements WorkbookDelegate, DataDelegate {
 			return new MyDataSource();
 		}
 
-		// use this object as data delgate
+		// use this object as data delegate
 		return $this;
 	}
 
@@ -247,7 +247,7 @@ class MyWorkbook implements WorkbookDelegate, DataDelegate {
 
 	/** simple return  */
 	public function valueForRowAndColumn(Workbook $oWorkbook, Sheet $oSheet, $iRow, $iColumn) {
-		return count($this->aData[$oSheet->getIdentifier()][$iRow][$iColumn]);
+		return $this->aData[$oSheet->getIdentifier()][$iRow][$iColumn];
 	}
 
 }
@@ -282,7 +282,7 @@ class myDataSource implements DataDelegate {
 
 	/** simple return */
 	public function valueForRowAndColumn(Workbook $oWorkbook, Sheet $oSheet, $iRow, $iColumn) {
-		return count($this->aData[$oSheet->getIdentifier()][$iRow][$iColumn]);
+		return $this->aData[$oSheet->getIdentifier()][$iRow][$iColumn];
 	}
 }
 
