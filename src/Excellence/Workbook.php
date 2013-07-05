@@ -49,7 +49,6 @@ use Excellence\Sheet;
  */
 class Workbook {
 
-
 #pragma mark - member variables
 
 	/**
