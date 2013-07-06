@@ -39,6 +39,7 @@ namespace Excellence;
 
 use Excellence\Delegates\DataDelegate;
 use Excellence\Delegates\MergeableDelegate;
+use Excellence\Delegates\StyleableDelegate;
 use Excellence\Delegates\WorkbookDelegate;
 use Excellence\Sheet;
 
@@ -103,6 +104,19 @@ class Workbook {
 	 */
 	private $aSharedStrings = array();
 
+	/**
+	 * @var null|Style
+	 */
+	private $oStandardStyle = null;
+
+	/**
+	 * array containing styles for workbook
+	 * @var array
+	 */
+	private $aStyles = array();
+
+	private $aStyleRefs = array();
+
 #pragma mark - construction
 
 	/**
@@ -120,6 +134,14 @@ class Workbook {
 
 		$this->sIdentifier = (string) $sIdentifier;
 		$this->oDelegate = $oDelegate;
+
+		$this->oStandardStyle = new Style();
+		$this->oStandardStyle
+			->setFont('Calibri')
+			->setFontSize(12)
+			->setColor('000000')
+		;
+
 	}
 
 #pragma mark - delegation
@@ -268,6 +290,18 @@ class Workbook {
 			throw new \LogicException('DataDelegate::numberOfColumnsInSheet have to return an integer value bigger than zero.');
 		}
 
+		// get default styles
+		if ($oDataSource instanceof StyleableDelegate) {
+
+			// set default styles
+			$oStandardStyle = $oDataSource->getStandardStyle($this, $oSheet);
+
+			// if style is instance of Style, set it
+			if ($oStandardStyle instanceof Style) {
+				$this->oStandardStyle = $oStandardStyle;
+			}
+		}
+
 		// create workbook xml
 		$this->aSheetData[$oSheet->getIdentifier()] = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
 			. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
@@ -284,7 +318,7 @@ class Workbook {
 		for($iRow = 0; $iRow < $iRows; $iRow++) {
 
 			// create row
-			$this->aSheetData[$oSheet->getIdentifier()] .= '<row r="' . ($iRow + 1) . '">';
+			$this->aSheetData[$oSheet->getIdentifier()] .= "\n".'<row r="' . ($iRow + 1) . '">';
 
 			for($iColumn = 0; $iColumn < $iColumns; $iColumn++) {
 
@@ -293,6 +327,9 @@ class Workbook {
 
 				// Excel coordinate
 				$sCord = $this->getCoordinatesByColumnAndRow($iColumn, $iRow + 1);
+
+				// style definition for cell
+				$sStyle = null;
 
 				// return if value is empty
 				if (null === $value) continue;
@@ -326,6 +363,22 @@ class Workbook {
 					}
 				}
 
+
+				// check if data source is instance of styleable delegate
+				if ($oDataSource instanceof StyleableDelegate) {
+					$oStyle = $oDataSource->getStyleForColumnAndRow($this, $oSheet, $iColumn, $iRow);
+
+					if ($oStyle instanceof Style) {
+						if (!array_key_exists($oStyle->getId(), $this->aStyles)) {
+							$this->aStyles[$oStyle->getId()] = $oStyle;
+							$this->aStyleRefs[$oStyle->getId()] = count($this->aStyles);
+						}
+
+						$sStyle = ' s="' . $this->aStyleRefs[$oStyle->getId()] . '"';
+					}
+
+				}
+
 				// function or formula
 				if ('string' == $iType && '=' == substr($value, 0, 1)) {
 
@@ -333,26 +386,26 @@ class Workbook {
 					$this->addColumnToCalcChain($sCord, $iSheet);
 
 					// add value to column
-					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '"><f>' . substr($value, 1) . '</f></c>';
+					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '"' . $sStyle . '><f>' . substr($value, 1) . '</f></c>';
 
 				// string
 				} elseif('string' == $iType) {
 					$iNum = $this->addValueToSharedStrings($value);
 
 					// add value to column
-					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="s"><v>' . $iNum . '</v></c>';
+					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="s"' . $sStyle . '><v>' . $iNum . '</v></c>';
 
 				// boolean
 				} elseif ('boolean' == $iType) {
 
 					// add value to column
-					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="b"><v>' . (int) $value . '</v></c>';
+					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="b"' . $sStyle . '><v>' . (int) $value . '</v></c>';
 
 				// number
 				} else {
 
 					// add value to column
-					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="n"><v>' . $value . '</v></c>';
+					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="n"' . $sStyle . '><v>' . $value . '</v></c>';
 				}
 
 				// add column to row
@@ -459,7 +512,7 @@ class Workbook {
 		$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'styles.xml', $this->workbookStyles());
 
 		// add workbook theme.xml
-		$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'theme' . DIRECTORY_SEPARATOR . 'theme1.xml', $this->workbookTheme());
+//		$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'theme' . DIRECTORY_SEPARATOR . 'theme1.xml', $this->workbookTheme());
 
 		// add workbook information
 		$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'workbook.xml', $this->sWorkbook);
@@ -498,7 +551,7 @@ class Workbook {
 			. '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
 //			. '<Default Extension="jpeg" ContentType="image/jpeg"/>'
 			. '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-			. '<Override PartName="/xl/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>'
+//			. '<Override PartName="/xl/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>'
 			. '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
 
 			// add shared strings if exists
@@ -609,7 +662,7 @@ class Workbook {
 		$sXml = '<?xml version="1.0"?>'
 			. '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
 				. '%s' // workbook sheets
-				. '<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>'
+//				. '<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme" Target="theme/theme1.xml"/>'
 				. '<Relationship Id="rId%d" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
 			. '</Relationships>'
 		;
@@ -641,7 +694,7 @@ class Workbook {
 		}
 
 		// return generated XML
-		return sprintf($sXml, $sSheets, $iId, $iId + 1);
+		return sprintf($sXml, $sSheets, $iId);
 	}
 
 	/**
@@ -650,40 +703,141 @@ class Workbook {
 	 * @return string
 	 */
 	private function workbookStyles() {
-		return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+
+		$aFonts = array();
+		$aFills = array(
+			'none' => '<fill><patternFill patternType="none"/></fill>',
+			'grey125' => '<fill><patternFill patternType="gray125"/></fill>',
+		);
+		$aBorders = array(
+			'<border/>' => 0,
+//			'<border><left style="thin"><color rgb="FFFF0000"/></left><right style="thin"><color rgb="FFFF0000"/></right><top style="thin"><color rgb="FFFF0000"/></top><bottom style="thin"><color rgb="FFFF0000"/></bottom></border>' => 1
+		);
+		$aStyles = array('<xf fontId="0" fillId="0" borderId="0" shrinkToFit="true" wrapText="true"/>');
+
+
+		$getFontName = function(Style $oStyle) {
+			return $oStyle->getFont()
+				. '_' . $oStyle->getFontSize()
+				. '_' . $oStyle->getColor()
+				. ((true == $oStyle->isBold()) ? 'bold' : '')
+				. ((true == $oStyle->isItalic()) ? 'italic' : '')
+			;
+		};
+
+		$addFont = function(Style $oStyle) use(&$aFonts, $getFontName) {
+			$sFontName = $getFontName($oStyle);
+			$aFonts[$sFontName] = '<font>';
+
+			if ($oStyle->hasFontSize()) {
+				$aFonts[$sFontName] .= '<sz val="' . $oStyle->getFontSize() . '"/>';
+			}
+
+			if ($oStyle->hasFont()) {
+				$aFonts[$sFontName] .= '<name val="' . $oStyle->getFont() . '"/>';
+
+			}
+
+			if ($oStyle->hasColor()) {
+				$aFonts[$sFontName] .= '<color rgb="FF' . $oStyle->getColor() . '"/>';
+			}
+
+			if ($oStyle->isBold()) {
+				$aFonts[$sFontName] .= '<b/>';
+			}
+
+			if ($oStyle->isItalic()) {
+				$aFonts[$sFontName] .= '<i/>';
+			}
+
+			$aFonts[$sFontName] .= '</font>';
+
+			if ('<font></font>' == $aFonts[$sFontName]) {
+				unset($aFonts[$sFontName]);
+				return 0;
+			}
+
+			return array_search($sFontName, array_keys($aFonts));
+
+
+		};
+
+		$addFill = function(Style $oStyle) use(&$aFills) {
+			if ($oStyle->hasBackgroundColor()) {
+				if (!array_key_exists($oStyle->getBackgroundColor(), $aFills)) {
+					$aFills[$oStyle->getBackgroundColor()] = '<fill><patternFill patternType="solid"><fgColor rgb="FF'.$oStyle->getBackgroundColor().'"/></patternFill></fill>';
+				}
+
+				return array_search($oStyle->getBackgroundColor(), array_keys($aFills));
+			}
+			return 0;
+		};
+
+		$addBorder = function(Style $oStyle) use(&$aBorders) {
+			if ($oStyle->hasBorder()) {
+
+				$sBorder = '<border>';
+				foreach($oStyle->getBorder() as $iAlignment => $aStyle) {
+
+					if ($iAlignment == Style::BORDER_ALIGN_LEFT) {
+						$sBorder .= '<left style="'.$aStyle['style'].'"><color rgb="FF'.$aStyle['color'].'"/></left>';
+					}
+
+					if ($iAlignment == Style::BORDER_ALIGN_RIGHT) {
+						$sBorder .= '<right style="'.$aStyle['style'].'"><color rgb="FF'.$aStyle['color'].'"/></right>';
+					}
+
+					if ($iAlignment == Style::BORDER_ALIGN_TOP) {
+						$sBorder .= '<top style="'.$aStyle['style'].'"><color rgb="FF'.$aStyle['color'].'"/></top>';
+					}
+
+					if ($iAlignment == Style::BORDER_ALIGN_BOTTOM) {
+						$sBorder .= '<bottom style="'.$aStyle['style'].'"><color rgb="FF'.$aStyle['color'].'"/></bottom>';
+					}
+				}
+
+
+				$sBorder .= '</border>';
+
+				if (!array_key_exists($sBorder, $aBorders)) {
+					$aBorders[$sBorder] = count($aBorders);
+				}
+
+				return $aBorders[$sBorder];
+			}
+			return count($aBorders) - 1;
+		};
+
+		if ($this->oStandardStyle instanceof Style) {
+			$addFont($this->oStandardStyle);
+		}
+
+		/** @var Style $oStyle */
+		foreach($this->aStyles as $oStyle) {
+
+			$sStyle = '<xf xfId="0" numFmtId="0" fontId="'.$addFont($oStyle).'" fillId="'.$addFill($oStyle).'" borderId="'.$addBorder($oStyle).'" shrinkToFit="true" wrapText="true"';
+
+			if ($oStyle->hasHorizontalAlignment() || $oStyle->hasVerticalAlignment()) {
+				$sStyle .= '>';
+
+				$sStyle .= '<alignment horizontal="'.$oStyle->getHorizontalAlignment().'" vertical="'.$oStyle->getVerticalAlignment().'"/>';
+				$sStyle .= '</xf>';
+			} else {
+				$sStyle .= '/>';
+			}
+
+			$aStyles[] = $sStyle;
+		}
+
+		$sStyle = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' . "\n"
 			. '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="x14ac" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac">'
-				. '<fonts count="1" x14ac:knownFonts="1">'
-					. '<font>'
-						. '<sz val="12"/>'
-						. '<color theme="1"/>'
-						. '<name val="Calibri"/>'
-						. '<family val="2"/>'
-						. '<scheme val="minor"/>'
-					. '</font>'
-				. '</fonts>'
-				. '<fills count="2">'
-					. '<fill>'
-						. '<patternFill patternType="none"/>'
-					. '</fill>'
-					. '<fill>'
-					. '<patternFill patternType="gray125"/>'
-					. '</fill>'
-				. '</fills>'
-				. '<borders count="1">'
-					. '<border>'
-						. '<left/>'
-						. '<right/>'
-						. '<top/>'
-						. '<bottom/>'
-						. '<diagonal/>'
-					. '</border>'
-				. '</borders>'
+				. '<fonts count="'.count($aFonts).'" x14ac:knownFonts="'.count($aFonts).'">'.implode('', $aFonts) .'</fonts>'
+				. '<fills count="'.count($aFills).'">'.implode('', $aFills).'</fills>'
+				. '<borders count="'.count($aBorders).'">'.implode('', array_keys($aBorders)).'</borders>'
 				. '<cellStyleXfs count="1">'
 					. '<xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>'
-				. '</cellStyleXfs>'
-				. '<cellXfs count="1">'
-					. '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
-				. '</cellXfs>'
+				.'</cellStyleXfs>'
+				. '<cellXfs count="'.count($aStyles).'">'.implode('', $aStyles).'</cellXfs>'
 				. '<cellStyles count="1">'
 					. '<cellStyle name="Standard" xfId="0" builtinId="0"/>'
 				. '</cellStyles>'
@@ -691,6 +845,8 @@ class Workbook {
 				. '<tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleMedium4"/>'
 			. '</styleSheet>'
 		;
+
+		return $sStyle;
 	}
 
 	/**
@@ -725,6 +881,7 @@ class Workbook {
 	 * Generate calc chain document
 	 *
 	 * @return string
+	 * @deprecated
 	 */
 	private function calcChain() {
 		return '<?xml version="1.0" encoding="utf-8"?>'

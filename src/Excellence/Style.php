@@ -51,7 +51,7 @@ class Style {
 	const BORDER_THIN					= 'thin';
 	const BORDER_MEDIUM					= 'medium';
 	const BORDER_THICK					= 'thick';
-	const BORDER_DOUBLE					= 'bouble';
+	const BORDER_DOUBLE					= 'double';
 	const BORDER_DOTTED					= 'dotted';
 	const BORDER_DASH_DOT				= 'dashDot';
 	const BORDER_MEDIUM_DASH_DOT		= 'mediumDashDot';
@@ -61,10 +61,11 @@ class Style {
 	const BORDER_DASHED					= 'dashed';
 	const BORDER_MEDIUM_DASHED			= 'mediumDashed';
 
-	const BORDER_ALIGN_TOP				= 1;
+	const BORDER_ALIGN_LEFT				= 1;
 	const BORDER_ALIGN_RIGHT			= 2;
-	const BORDER_ALIGN_BOTTOM			= 4;
-	const BORDER_ALIGN_LEFT				= 8;
+	const BORDER_ALIGN_TOP				= 4;
+	const BORDER_ALIGN_BOTTOM			= 8;
+	const BORDER_ALIGN_ALL				= 15;
 
 #pragma mark - alignment constants
 
@@ -139,18 +140,43 @@ class Style {
 	 */
 	private $aBorder = array();
 
+	/**
+	 * id of this styles
+	 * @var null
+	 */
+	private $sId = null;
+
+	public function getId() {
+		if (null == $this->sId) {
+			$this->sId = md5(serialize($this));
+		}
+
+		return $this->sId;
+	}
+
 #pragma mark - font handling
 
 	/**
-	 * defines a font family
-	 * 
+	 * defines a font family, font size and color
+	 *
 	 * @param string $sFont
+	 * @param float $iSize
+	 * @param string $sColor
+	 *
 	 * @return Style
 	 */
 	public function setFont($sFont) {
 		$this->sFont = $sFont;
 
 		return $this;
+	}
+
+	/**
+	 * checks if a font is defined
+	 * @return bool
+	 */
+	public function hasFont() {
+		return (null !== $this->sFont && is_string($this->sFont));
 	}
 
 	/**
@@ -172,6 +198,14 @@ class Style {
 		$this->iFontSize = (float) $iFontSize;
 
 		return $this;
+	}
+
+	/**
+	 * checks if a font size is defined
+	 * @return bool
+	 */
+	public function hasFontSize() {
+		return (null !== $this->iFontSize && is_float($this->iFontSize));
 	}
 
 	/**
@@ -239,6 +273,14 @@ class Style {
 	}
 
 	/**
+	 * checks if a color is defined
+	 * @return bool
+	 */
+	public function hasColor() {
+		return (null !== $this->sColor && is_string($this->sColor));
+	}
+
+	/**
 	 * return hexadecimal color code
 	 * 
 	 * @return null|string
@@ -259,6 +301,14 @@ class Style {
 		$this->sBackground = $sBackgroundColor;
 
 		return $this;
+	}
+
+	/**
+	 * checks if a font is defined
+	 * @return bool
+	 */
+	public function hasBackgroundColor() {
+		return (null !== $this->sBackground && is_string($this->sBackground));
 	}
 
 	/**
@@ -302,6 +352,14 @@ class Style {
 	}
 
 	/**
+	 * checks if a horizontal alignment is defined
+	 * @return bool
+	 */
+	public function hasHorizontalAlignment() {
+		return (null !== $this->sHorizontalAlignment && is_string($this->sHorizontalAlignment));
+	}
+
+	/**
 	 * returns horizontal alignment
 	 *
 	 * @return null|string
@@ -325,6 +383,14 @@ class Style {
 		$this->sVerticalAlignment = $sAlignment;
 
 		return $this;
+	}
+
+	/**
+	 * checks if a vertical alignment is defined
+	 * @return bool
+	 */
+	public function hasVerticalAlignment() {
+		return (null !== $this->sVerticalAlignment && is_string($this->sVerticalAlignment));
 	}
 
 	/**
@@ -363,11 +429,8 @@ class Style {
 			throw new \InvalidArgumentException(sprintf('Border style "%s" is not allowed. Please provide a valid style.', $sStyle));
 		}
 
-		// max border alignment bit
-		$iMaxAlignment = self::BORDER_ALIGN_TOP | self::BORDER_ALIGN_RIGHT | self::BORDER_ALIGN_BOTTOM | self::BORDER_ALIGN_LEFT;
-
 		// check if $iAlignment in that range
-		if (0 == ($iMaxAlignment & $iAlignment)) {
+		if (0 == (self::BORDER_ALIGN_ALL & $iAlignment)) {
 			throw new \InvalidArgumentException('Please provide a valid border alignment style');
 		}
 
@@ -375,12 +438,29 @@ class Style {
 		$this->checkColor($sColor);
 
 		// set border
-		$this->aBorder[$iAlignment] = array(
-			'style' => $sStyle,
-			'color' => $sColor
-		);
+
+		for($i = 1; $i <= self::BORDER_ALIGN_ALL; $i = $i * 2) {
+			if (($iAlignment & $i) == true) {
+				$this->aBorder[$i] = array(
+					'style' => $sStyle,
+					'color' => $sColor,
+				);
+			}
+		}
+
+		// this is very important, excel need border styles in left, right, top, bottom condition
+		ksort($this->aBorder);
 
 		return $this;
+	}
+
+	/**
+	 * check if border is defined
+	 *
+	 * @return bool
+	 */
+	public function hasBorder() {
+		return (!empty($this->aBorder));
 	}
 
 	/**
