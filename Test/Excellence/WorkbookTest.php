@@ -551,7 +551,7 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 	 */
 	public function save_createWorkbookPerformanceTest_SaveWorkBookIncludingNColumnsAnd4RowsUnter20Seconds() {
 
-		//$this->markTestSkipped('only for performance optimization');
+		$this->markTestSkipped('only for performance optimization');
 
 		$sFilename = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'test.xlsx';
 
@@ -564,7 +564,7 @@ class WorkbookTest extends \PHPUnit_Framework_TestCase {
 			->save($sFilename)
 		;
 
-		$this->assertLessThan(0.1, (microtime(true)-$iTime));
+		$this->assertLessThan(0.15, (microtime(true)-$iTime));
 
 	}
 }

@@ -286,7 +286,7 @@ class Style {
 	public function setColor($sColor) {
 		$this->checkColor($sColor);
 		
-		$this->sColor = $sColor;
+		$this->sColor = strtoupper($sColor);
 
 		return $this;
 	}
@@ -317,7 +317,7 @@ class Style {
 	public function setBackgroundColor($sBackgroundColor) {
 		$this->checkColor($sBackgroundColor);
 		
-		$this->sBackground = $sBackgroundColor;
+		$this->sBackground = strtoupper($sBackgroundColor);
 
 		return $this;
 	}
@@ -346,7 +346,7 @@ class Style {
 	 * @throws \InvalidArgumentException
 	 */
 	private function checkColor($sColor) {
-		if (!preg_match('/^[A-F0-9]{6,6}$/', $sColor)) {
+		if (!preg_match('/^[A-F0-9]{6,6}$/i', $sColor)) {
 			throw new \InvalidArgumentException('Please provide a hexadecimal color code.');
 		}
 	}
@@ -396,7 +396,7 @@ class Style {
 	 */
 	public function setVerticalAlignment($sAlignment) {
 		if (!in_array($sAlignment, array(self::ALIGN_CENTER, self::ALIGN_TOP, self::ALIGN_JUSTIFY, self::ALIGN_BOTTOM))) {
-			throw new \InvalidArgumentException('Horizontal alignment allows only "center, top,  justify, bottom".');
+			throw new \InvalidArgumentException('Vertical alignment allows only "center, top, justify, bottom".');
 		}
 
 		$this->sVerticalAlignment = $sAlignment;
@@ -450,7 +450,7 @@ class Style {
 
 		// check if $iAlignment in that range
 		if (0 == (self::BORDER_ALIGN_ALL & $iAlignment)) {
-			throw new \InvalidArgumentException('Please provide a valid border alignment style');
+			throw new \InvalidArgumentException('Please provide a valid border alignment style.');
 		}
 
 		// check color
@@ -462,7 +462,7 @@ class Style {
 			if (($iAlignment & $i) == true) {
 				$this->aBorder[$i] = array(
 					'style' => $sStyle,
-					'color' => $sColor,
+					'color' => strtoupper($sColor),
 				);
 			}
 		}

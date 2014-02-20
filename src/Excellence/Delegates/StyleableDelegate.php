@@ -1,7 +1,7 @@
 <?php
 /**
  * @author        Ronald Marske <scyks@ceow.de>
- * @filesource    StyleableDelegate.php
+ * @filesource    src/Execllence/Delegate/StyleableDelegate.php
  *
  * @copyright     Copyright (c) 2013 Ronald Marske, All rights reserved.
  *
