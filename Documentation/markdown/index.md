@@ -19,7 +19,7 @@ Excellence is providing interfaces that you have to implement. There are `WorkBo
 ### Functional
 
 * [Example implementation](example.md)
-* [Cell merging](cell-merging.d)
+* [Cell merging](cell-merging.md)
 
 ## Roadmap
 
