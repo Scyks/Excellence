@@ -141,17 +141,39 @@ class Style {
 	private $aBorder = array();
 
 	/**
+	 * width of a cell
+	 * 
+	 * @var int
+	 */
+	private $fWidth = 0;
+
+	/**
+	 * height of a cell
+	 * 
+	 * @var int
+	 */
+	private $fHeight = 0;
+	
+	/**
 	 * id of this styles
 	 * @var null
 	 */
 	private $sId = null;
 
+#pragma mark - identifier
+
+	/**
+	 * this method returns a string containing an id, by given params
+	 * 
+	 * @return string
+	 */
 	public function getId() {
 		if (null == $this->sId) {
 			$this->sId = md5(serialize($this));
 		}
 
 		return $this->sId;
+
 	}
 
 #pragma mark - font handling
@@ -160,9 +182,6 @@ class Style {
 	 * defines a font family, font size and color
 	 *
 	 * @param string $sFont
-	 * @param float $iSize
-	 * @param string $sColor
-	 *
 	 * @return Style
 	 */
 	public function setFont($sFont) {
@@ -470,5 +489,67 @@ class Style {
 	 */
 	public function getBorder() {
 		return $this->aBorder;
+	}
+	
+#pragma mark - dimensions
+
+	/**
+	 * defines a width for a cell
+	 *
+	 * @param float $fWidth
+	 * @return Style
+	 */
+	public function setWidth($fWidth) {
+		
+		$this->fWidth = (float) $fWidth;
+
+		return $this;
+	}
+
+	/**
+	 * checks if a width is defined
+	 * @return bool
+	 */
+	public function hasWidth() {
+		return (0 !== $this->fWidth);
+	}
+
+	/**
+	 * return width for a cell
+	 *
+	 * @return null|float
+	 */
+	public function getWidth() {
+		return $this->fWidth;
+	}
+	
+	/**
+	 * defines a height for a cell
+	 *
+	 * @param float $fHeight
+	 * @return Style
+	 */
+	public function setHeight($fHeight) {
+		
+		$this->fHeight = (float) $fHeight;
+
+		return $this;
+	}
+
+	/**
+	 * checks if a height is defined
+	 * @return bool
+	 */
+	public function hasHeight() {
+		return (0 !== $this->fHeight);
+	}
+
+	/**
+	 * return height for a cell
+	 *
+	 * @return null|float
+	 */
+	public function getHeight() {
+		return $this->fHeight;
 	}
 }

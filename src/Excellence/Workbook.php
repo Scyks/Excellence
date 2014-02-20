@@ -309,16 +309,21 @@ class Workbook {
 			. '<sheetViews>'
 				. '<sheetView tabSelected="1" workbookViewId="0"/>'
 			. '</sheetViews>'
-			.'<sheetData>'
+			. '%s'
+			. '<sheetData>'
 		;
 
 		$sMerge = '';
+		$aColStyles = array();
 
 		// sheet loop
 		for($iRow = 0; $iRow < $iRows; $iRow++) {
 
+
+			$sRowStyles = '';
+			$sRow = '';
 			// create row
-			$this->aSheetData[$oSheet->getIdentifier()] .= "\n".'<row r="' . ($iRow + 1) . '">';
+			$sRow .= "\n".'<row r="' . ($iRow + 1) . '"%s>';
 
 			for($iColumn = 0; $iColumn < $iColumns; $iColumn++) {
 
@@ -375,6 +380,16 @@ class Workbook {
 						}
 
 						$sStyle = ' s="' . $this->aStyleRefs[$oStyle->getId()] . '"';
+
+						// height for columns
+						if ($oStyle->hasHeight() && '' == $sRowStyles) {
+							$sRowStyles .= ' spans="1:8" customFormat="1" ht="'.$oStyle->getHeight().'" customHeight="1"';
+						}
+
+						// width for columns
+						if ($oStyle->hasWidth() && !array_key_exists($iColumn, $aColStyles)) {
+							$aColStyles[$iColumn] = '<col min="'.($iColumn+1).'" max="'.($iColumn+1).'" width="'.$oStyle->getWidth().'" customWidth="1"/>';
+						}
 					}
 
 				}
@@ -383,35 +398,47 @@ class Workbook {
 				if ('string' == $iType && '=' == substr($value, 0, 1)) {
 
 					// add value to calchain
-					$this->addColumnToCalcChain($sCord, $iSheet);
+					#$this->addColumnToCalcChain($sCord, $iSheet);
 
 					// add value to column
-					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '"' . $sStyle . '><f>' . substr($value, 1) . '</f></c>';
+					$sRow .= '<c r="' . $sCord . '"' . $sStyle . '><f>' . substr($value, 1) . '</f></c>';
 
 				// string
 				} elseif('string' == $iType) {
 					$iNum = $this->addValueToSharedStrings($value);
 
 					// add value to column
-					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="s"' . $sStyle . '><v>' . $iNum . '</v></c>';
+					$sRow .= '<c r="' . $sCord . '" t="s"' . $sStyle . '><v>' . $iNum . '</v></c>';
 
 				// boolean
 				} elseif ('boolean' == $iType) {
 
 					// add value to column
-					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="b"' . $sStyle . '><v>' . (int) $value . '</v></c>';
+					$sRow .= '<c r="' . $sCord . '" t="b"' . $sStyle . '><v>' . (int) $value . '</v></c>';
 
 				// number
 				} else {
 
 					// add value to column
-					$this->aSheetData[$oSheet->getIdentifier()] .= '<c r="' . $sCord . '" t="n"' . $sStyle . '><v>' . $value . '</v></c>';
+					$sRow .= '<c r="' . $sCord . '" t="n"' . $sStyle . '><v>' . $value . '</v></c>';
 				}
 
 				// add column to row
 			}
 
-			$this->aSheetData[$oSheet->getIdentifier()] .= '</row>';
+			$sRow .= '</row>';
+
+			// replace row styles
+			$sRow = sprintf($sRow, $sRowStyles);
+
+			$this->aSheetData[$oSheet->getIdentifier()] .= $sRow;
+		}
+
+		// set col styles
+		if (!empty($aColStyles)) {
+			$this->aSheetData[$oSheet->getIdentifier()] = sprintf($this->aSheetData[$oSheet->getIdentifier()], '<cols>'.implode('', $aColStyles).'</cols>');
+		} else {
+			$this->aSheetData[$oSheet->getIdentifier()] = sprintf($this->aSheetData[$oSheet->getIdentifier()], '');
 		}
 
 		$this->aSheetData[$oSheet->getIdentifier()] .= '</sheetData>';
@@ -711,7 +738,6 @@ class Workbook {
 		);
 		$aBorders = array(
 			'<border/>' => 0,
-//			'<border><left style="thin"><color rgb="FFFF0000"/></left><right style="thin"><color rgb="FFFF0000"/></right><top style="thin"><color rgb="FFFF0000"/></top><bottom style="thin"><color rgb="FFFF0000"/></bottom></border>' => 1
 		);
 		$aStyles = array('<xf fontId="0" fillId="0" borderId="0" shrinkToFit="true" wrapText="true"/>');
 
@@ -726,36 +752,36 @@ class Workbook {
 		};
 
 		$addFont = function(Style $oStyle) use(&$aFonts, $getFontName) {
-			$sFontName = $getFontName($oStyle);
-			$aFonts[$sFontName] = '<font>';
+				$sFontName = $getFontName($oStyle);
+				$aFonts[$sFontName] = '<font>';
 
-			if ($oStyle->hasFontSize()) {
-				$aFonts[$sFontName] .= '<sz val="' . $oStyle->getFontSize() . '"/>';
-			}
+				if ($oStyle->hasFontSize()) {
+					$aFonts[$sFontName] .= '<sz val="' . $oStyle->getFontSize() . '"/>';
+				}
 
-			if ($oStyle->hasFont()) {
-				$aFonts[$sFontName] .= '<name val="' . $oStyle->getFont() . '"/>';
+				if ($oStyle->hasFont()) {
+					$aFonts[$sFontName] .= '<name val="' . $oStyle->getFont() . '"/>';
 
-			}
+				}
 
-			if ($oStyle->hasColor()) {
-				$aFonts[$sFontName] .= '<color rgb="FF' . $oStyle->getColor() . '"/>';
-			}
+				if ($oStyle->hasColor()) {
+					$aFonts[$sFontName] .= '<color rgb="FF' . $oStyle->getColor() . '"/>';
+				}
 
-			if ($oStyle->isBold()) {
-				$aFonts[$sFontName] .= '<b/>';
-			}
+				if ($oStyle->isBold()) {
+					$aFonts[$sFontName] .= '<b/>';
+				}
 
-			if ($oStyle->isItalic()) {
-				$aFonts[$sFontName] .= '<i/>';
-			}
+				if ($oStyle->isItalic()) {
+					$aFonts[$sFontName] .= '<i/>';
+				}
 
-			$aFonts[$sFontName] .= '</font>';
+				$aFonts[$sFontName] .= '</font>';
 
-			if ('<font></font>' == $aFonts[$sFontName]) {
-				unset($aFonts[$sFontName]);
-				return 0;
-			}
+				if ('<font></font>' == $aFonts[$sFontName]) {
+					unset($aFonts[$sFontName]);
+					return 0;
+				}
 
 			return array_search($sFontName, array_keys($aFonts));
 
