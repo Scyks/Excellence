@@ -1,7 +1,7 @@
 <?php
 /**
- * @author        Ronald Marske <scyks@ceow.de>
- * @filesource    src/Execllence/Delegate/StyleableDelegate.php
+ * @author		  Ronald Marske <r.marske@secu-ring.de>
+ * @filesource	  src/Excellence/Writer/AbstractWriter.php
  *
  * @copyright     Copyright (c) 2013 Ronald Marske, All rights reserved.
  *
@@ -35,15 +35,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Excellence\Delegates;
+namespace Excellence\Writer;
 
+use \Excellence\Workbook;
+use Excellence\Delegates\WorkbookDelegate;
 
-use Excellence\Sheet;
-use Excellence\Workbook;
+/**
+ * Abstraction of document writer class
+ * @package Excellence\Writer
+ */
+abstract class AbstractWriter {
 
-interface StyleableDelegate {
+	/**
+	 * @var Workbook
+	 */
+	private $oWorkbook = null;
 
-	public function getStandardStyle(Workbook $oWorkbook, Sheet $oSheet);
+	/**
+	 * Construction of a document writer for Excellence
+	 * @param Workbook $oWorkbook
+	 */
+	public function __construct(Workbook $oWorkbook) {
+		$this->oWorkbook = $oWorkbook;
+	}
 
-	public function getStyleForColumnAndRow(Workbook $oWorkbook, Sheet $oSheet, $iColumn, $iRow);
-}
+	/**
+	 * @return Workbook
+	 */
+	public function getWorkbook() {
+		return $this->oWorkbook;
+	}
+
+#pragma mark - get delegate
+
+	/**
+	 * @return WorkbookDelegate
+	 */
+	public function getDelegate() {
+		return $this->getWorkbook()->getDelegate();
+	}
+
+#pragma mark - abstract methods
+
+	/**
+	 * This method will save a document to a file and returns if file
+	 * could saved or not.
+	 *
+	 * @param string $sFilename
+	 * @return bool
+	 */
+	abstract public function saveToFile($sFilename);
+
+} 
