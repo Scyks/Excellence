@@ -217,6 +217,50 @@ class ExcelTest extends TestCase {
 		$this->assertSame(0, $oWriter->addValueToSharedStrings('foobar'));
 	}
 
+#pragma mark - hyperlinks
+
+	/**
+	 * @test
+	 */
+	public function addHyperlink_stringDoesntExists_returnStorageNumber() {
+		$oWriter = $this->createWriter();
+		$oSheet = $oWriter->getDelegate()->getSheetForWorkBook($oWriter->getWorkbook(), 0);
+		$this->assertSame(1, $oWriter->addHyperlink($oSheet, 'foobar'));
+	}
+
+	/**
+	 * @test
+	 */
+	public function addHyperlink_stringDoesExists_returnStorageNumberOfExisting() {
+		$oWriter = $this->createWriter();
+		$oSheet = $oWriter->getDelegate()->getSheetForWorkBook($oWriter->getWorkbook(), 0);
+		$oWriter->addHyperlink($oSheet, 'foobar');
+		$oWriter->addHyperlink($oSheet, 'foobar2');
+		$this->assertSame(1, $oWriter->addHyperlink($oSheet, 'foobar'));
+	}
+
+	/**
+	 * @test
+	 */
+	public function hasHyperlinks_noLinks_returnFalse() {
+		$oWriter = $this->createWriter();
+		$oSheet = $oWriter->getDelegate()->getSheetForWorkBook($oWriter->getWorkbook(), 0);
+		$this->assertFalse($oWriter->hasHyperlinks($oSheet));
+	}
+
+	/**
+	 * @test
+	 */
+	public function hasHyperlinks_withLinks_returnTrue() {
+		$oWriter = $this->createWriter();
+		$oSheet = $oWriter->getDelegate()->getSheetForWorkBook($oWriter->getWorkbook(), 0);
+		$oWriter->addHyperlink($oSheet, 'foobar');
+		$oWriter->addHyperlink($oSheet, 'foobar2');
+		$this->assertTrue($oWriter->hasHyperlinks($oSheet));
+	}
+
+
+
 #pragma mark - createSheetXml
 
 	/**
@@ -357,7 +401,7 @@ class ExcelTest extends TestCase {
 		$oWorkbook = $this->makeWorkbook();
 
 		$sCompareXml = '<?xml version="1.0" encoding="UTF-8"?>'
-			. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
+			. '<worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
 			. '<sheetViews>'
 			. '<sheetView tabSelected="1" workbookViewId="0"/>'
 			. '</sheetViews>'
@@ -431,7 +475,7 @@ class ExcelTest extends TestCase {
 		$oWorkbook = $this->makeWorkbook('merge', $oDataSource);
 
 		$sCompareXml = '<?xml version="1.0" encoding="UTF-8"?>'
-			. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
+			. '<worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
 			. '<sheetViews>'
 			. '<sheetView tabSelected="1" workbookViewId="0"/>'
 			. '</sheetViews>'
@@ -456,6 +500,63 @@ class ExcelTest extends TestCase {
 			. '<mergeCell ref="B2:C3"/>'
 			. '<mergeCell ref="A3:A4"/>'
 			. '</mergeCells>'
+			. '</worksheet>'
+		;
+
+
+		$oWriter = $this->createWriter($oWorkbook);
+		$oWriter->createSheetDataXml($oWorkbook->getDelegate()->getSheetForWorkBook($oWorkbook, 0), 0);
+
+		$oReflection = new \ReflectionClass($oWriter);
+		$oSheetData = $oReflection->getProperty('aSheetData');
+		$oSheetData->setAccessible(true);
+		$aSheets = $oSheetData->getValue($oWriter);
+
+		$this->assertXmlStringEqualsXmlString($aSheets['sheet1'], $sCompareXml);
+	}
+
+	/**
+	 * @test
+	 */
+	public function createSheetDataXml_createLinkableSheetDataXml_ScheetDataXmlCreated() {
+
+		$oDataSource = $this->makeLinkableDelegate();
+		$oWorkbook = $this->makeWorkbook('merge', $oDataSource);
+
+		$sCompareXml = '<?xml version="1.0" encoding="UTF-8"?>'
+			. '<worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
+			. '<sheetViews>'
+			. '<sheetView tabSelected="1" workbookViewId="0"/>'
+			. '</sheetViews>'
+			. '<sheetData>'
+			. '<row r="1">'
+			. '<c r="A1" t="s"><v>0</v></c>'
+			. '<c r="B1" t="n"><v>42</v></c>'
+			. '<c r="C1" t="n"><v>42.34</v></c>'
+			. '<c r="D1" t="b"><v>1</v></c>'
+			. '</row>'
+			. '<row r="2">'
+			. '<c r="A2" t="s"><v>1</v></c>'
+			. '<c r="B2" t="n"><v>42</v></c>'
+			. '<c r="C2" t="n"><v>42.34</v></c>'
+			. '<c r="D2" t="b"><v>0</v></c>'
+			. '</row>'
+			. '<row r="3">'
+			. '<c r="A3" t="s"><v>2</v></c>'
+			. '<c r="B3" t="n"><v>42</v></c>'
+			. '<c r="C3" t="n"><v>42.34</v></c>'
+			. '<c r="D3" t="b"><v>1</v></c>'
+			. '</row>'
+			. '<row r="4">'
+			. '<c r="B4"><f>SUM(B1:B3)</f></c>'
+			. '<c r="C4"><f>SUM(C1:C3)</f></c>'
+			. '</row>'
+			. '</sheetData>'
+			. '<hyperlinks>'
+			. '<hyperlink ref="A1" r:id="rId1"/>'
+			. '<hyperlink ref="A2" r:id="rId1"/>'
+			. '<hyperlink ref="A3" r:id="rId1"/>'
+			. '</hyperlinks>'
 			. '</worksheet>'
 		;
 
@@ -655,7 +756,7 @@ class ExcelTest extends TestCase {
 			. '<xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>'
 			. '</cellStyleXfs>'
 			. '<cellXfs count="1">'
-			. '<xf fontId="0" fillId="0" borderId="0" shrinkToFit="true" wrapText="true"/>'
+			. '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" shrinkToFit="true" wrapText="true"/>'
 			. '</cellXfs>'
 			. '<cellStyles count="1">'
 			. '<cellStyle name="Standard" xfId="0" builtinId="0"/>'
@@ -695,6 +796,7 @@ class ExcelTest extends TestCase {
 				. '<font>'
 				. '<b/>'
 				. '<i/>'
+				. '<u/>'
 				. '</font>'
 				. '</fonts>'
 				. '<fills count="4">'
@@ -750,7 +852,7 @@ class ExcelTest extends TestCase {
 				. '<xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>'
 				. '</cellStyleXfs>'
 				. '<cellXfs count="4">'
-				. '<xf fontId="0" fillId="0" borderId="0" shrinkToFit="true" wrapText="true"/>'
+				. '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" shrinkToFit="true" wrapText="true"/>'
 				. '<xf xfId="0" numFmtId="0" fontId="1" fillId="0" borderId="1" shrinkToFit="true" wrapText="true">'
 				. '<alignment horizontal="center" vertical="center"/>'
 				. '</xf>'
@@ -805,6 +907,29 @@ class ExcelTest extends TestCase {
 		$this->assertXmlStringEqualsXmlString($sXML, $oWriter->sharedStringsXml());
 	}
 
+	/**
+	 * @test
+	 */
+	public function worksheetRelationsXml_includingHyperlinks_XMLGenerated() {
+
+		$sXML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+				. '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+				. '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="http://google.de" TargetMode="External"/>'
+				. '</Relationships>'
+		;
+
+		$oLinkableDelegate = $this->makeLinkableDelegate();
+		$oWorkbook = $this->makeWorkbook('workbook', $oLinkableDelegate);
+		$oWriter = $this->createWriter($oWorkbook);
+
+		$oWriter->createSheetXml();
+		$oSheet = $oWriter->getDelegate()->getSheetForWorkBook($oWriter->getWorkbook(), 0);
+		$oWriter->createSheetDataXml($oSheet, 0);
+
+
+		$this->assertXmlStringEqualsXmlString($sXML, $oWriter->worksheetRelationsXml($oSheet));
+	}
+
 #pragma mark - create file
 
 	/**
@@ -814,7 +939,9 @@ class ExcelTest extends TestCase {
 	 */
 	public function  saveToFile_fileExists_ThrowsException() {
 		$sFilename = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . '.gitignore';
-		$oWriter = $this->createWriter();
+		$oLinkableDelegate = $this->makeLinkableDelegate();
+		$oWorkbook = $this->makeWorkbook('workbook', $oLinkableDelegate);
+		$oWriter = $this->createWriter($oWorkbook);
 
 		$oWriter->saveToFile($sFilename);
 
@@ -825,7 +952,10 @@ class ExcelTest extends TestCase {
 	 */
 	public function  saveToFile_createExcelFile_ExcelFileCreated() {
 		$sFilename = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'test.xlsx';
-		$oWriter = $this->createWriter();
+
+		$oLinkableDelegate = $this->makeLinkableDelegate();
+		$oWorkbook = $this->makeWorkbook('workbook', $oLinkableDelegate);
+		$oWriter = $this->createWriter($oWorkbook);
 
 		$oWriter->saveToFile($sFilename);
 

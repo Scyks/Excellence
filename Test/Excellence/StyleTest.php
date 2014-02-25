@@ -63,6 +63,8 @@ class StyleTest extends \PHPUnit_Framework_TestCase {
 			array('setBold', 'bBold', true),
 			array('setItalic', 'bItalic', false),
 			array('setItalic', 'bItalic', true),
+			array('setUnderline', 'bUnderline', false),
+			array('setUnderline', 'bUnderline', true),
 			array('setColor', 'sColor', 'FFCC00'),
 			array('setBackgroundColor', 'sBackground', 'FFCC00'),
 			array('setHorizontalAlignment', 'sHorizontalAlignment', Style::ALIGN_CENTER),
@@ -79,6 +81,7 @@ class StyleTest extends \PHPUnit_Framework_TestCase {
 			array('setFontSize', 11.0),
 			array('setBold', null),
 			array('setItalic', null),
+			array('setUnderline', null),
 			array('setColor', 'FFCC00'),
 			array('setBackgroundColor', 'FFCC00'),
 			array('setHorizontalAlignment', Style::ALIGN_CENTER),
@@ -96,6 +99,7 @@ class StyleTest extends \PHPUnit_Framework_TestCase {
 			array('hasFontSize', 'setFontSize', 11.0, false),
 			array('isBold', 'setBold', true, false),
 			array('isItalic', 'setItalic', true, false),
+			array('hasUnderline', 'setUnderline', true, false),
 			array('hasColor', 'setColor', 'FFCC00', false),
 			array('hasBackgroundColor', 'setBackgroundColor', 'FFCC00', false),
 			array('hasHorizontalAlignment', 'setHorizontalAlignment', Style::ALIGN_CENTER, false),
@@ -125,7 +129,7 @@ class StyleTest extends \PHPUnit_Framework_TestCase {
 	 * @test
 	 */
 	public function getId_createIdentifier_returnMd5String() {
-		$this->assertSame('afcbce2745265700a93509be27642252', $this->makeStyle()->getId());
+		$this->assertSame('34e7a020e74217423d5f790aac0280de', $this->makeStyle()->getId());
 	}
 
 	/**

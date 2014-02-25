@@ -43,6 +43,7 @@ use Excellence\Style;
 use Excellence\Delegates\DataDelegate;
 use Excellence\Delegates\StylableDelegate;
 use Excellence\Delegates\MergeableDelegate;
+use Excellence\Delegates\LinkableDelegate;
 
 
 /**
@@ -82,6 +83,13 @@ class Excel extends AbstractWriter {
 	private $aSharedStrings = array();
 
 	/**
+	 * contains array with hyperlinks
+	 * hyperlink => id
+	 * @var array
+	 */
+	private $aHyperlinks = array();
+
+	/**
 	 * array containing styles for workbook
 	 * @var array
 	 */
@@ -117,6 +125,49 @@ class Excel extends AbstractWriter {
 		// return current index;
 		return $iNum;
 
+	}
+
+#pragma mark - hyperlinks
+
+	/**
+	 * add a hyperlink to link list and returns index of this hyperlink
+	 *
+	 * @param Sheet $oSheet
+	 * @param string $value
+	 *
+	 * @return int
+	 */
+	protected function addHyperlink(Sheet &$oSheet, $value) {
+
+		if (!array_key_exists($oSheet->getIdentifier(), $this->aHyperlinks)) {
+			$this->aHyperlinks[$oSheet->getIdentifier()] = array();
+		}
+
+		// check if value currently exists and return index
+		if (array_key_exists($value, $this->aHyperlinks[$oSheet->getIdentifier()])) {
+			return $this->aHyperlinks[$oSheet->getIdentifier()][$value];
+		}
+
+		// get current count
+		$iNum = count($this->aHyperlinks[$oSheet->getIdentifier()]) + 1;
+
+		// add value to shared strings table
+		$this->aHyperlinks[$oSheet->getIdentifier()][$value] = $iNum;
+
+		// return current index;
+		return $iNum;
+
+	}
+
+	/**
+	 * will check if there are hyperlinks and returns true, when there is
+	 * minimum one hyperlink. Otherwise this method returns false.
+	 *
+	 * @param Sheet $oSheet
+	 * @return bool
+	 */
+	protected function hasHyperlinks(Sheet &$oSheet) {
+		return (isset($this->aHyperlinks[$oSheet->getIdentifier()]) && !empty($this->aHyperlinks[$oSheet->getIdentifier()]));
 	}
 
 #pragma mark - sheet handling
@@ -228,7 +279,7 @@ class Excel extends AbstractWriter {
 
 		// create workbook xml
 		$this->aSheetData[$oSheet->getIdentifier()] = '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
-			. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
+			. '<worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
 			// formally at this position is a dimension tag, but Excel don't need it <dimension ref="A1:B2"/>
 			. '<sheetViews>'
 			. '<sheetView tabSelected="1" workbookViewId="0"/>'
@@ -239,6 +290,7 @@ class Excel extends AbstractWriter {
 
 		$sMerge = '';
 		$aColStyles = array();
+		$sHyperlinks = '';
 
 		// sheet loop
 		for($iRow = 0; $iRow < $iRows; $iRow++) {
@@ -272,7 +324,7 @@ class Excel extends AbstractWriter {
 				}
 
 				// check if data source implements mergeable delegate
-				if ($this->getDelegate() instanceof MergeableDelegate) {
+				if ($oDataSource instanceof MergeableDelegate) {
 
 					// get merge range
 					$sMergeRange = $this->getDelegate()->mergeByColumnAndRow($this->getWorkbook(), $iColumn, $iRow);
@@ -318,11 +370,16 @@ class Excel extends AbstractWriter {
 
 				}
 
-				// function or formula
-				if ('string' == $iType && '=' == substr($value, 0, 1)) {
+				// Hyperlinks
+				if ($oDataSource instanceof LinkableDelegate && $oDataSource->hasLinkForColumnAndRow($this->getWorkbook(), $oSheet, $iRow, $iColumn)) {
 
-					// add value to calchain
-					#$this->addColumnToCalcChain($sCord, $iSheet);
+					$iLinkId = $this->addHyperlink($oSheet, $oDataSource->getLinkForColumnAndRow($this->getWorkbook(), $oSheet, $iRow, $iColumn));
+					$sHyperlinks .= '<hyperlink ref="' . $sCord . '" r:id="rId' . $iLinkId . '" />';
+
+				}
+
+				// function or formula
+				if ('string' == $iType && '=' == mb_substr($value, 0, 1, 'utf-8')) {
 
 					// add value to column
 					$sRow .= '<c r="' . $sCord . '"' . $sStyle . '><f>' . substr($value, 1) . '</f></c>';
@@ -347,7 +404,6 @@ class Excel extends AbstractWriter {
 					$sRow .= '<c r="' . $sCord . '" t="n"' . $sStyle . '><v>' . $value . '</v></c>';
 				}
 
-				// add column to row
 			}
 
 			$sRow .= '</row>';
@@ -367,9 +423,16 @@ class Excel extends AbstractWriter {
 
 		$this->aSheetData[$oSheet->getIdentifier()] .= '</sheetData>';
 
+		// add hyperlinks
+		if (0 < strlen($sHyperlinks)) {
+			$this->aSheetData[$oSheet->getIdentifier()] .= '<hyperlinks>' . $sHyperlinks . '</hyperlinks>';
+			unset($sHyperlinks);
+		}
+
 		// merged cells
 		if (0 < strlen($sMerge)) {
 			$this->aSheetData[$oSheet->getIdentifier()] .= '<mergeCells>' . $sMerge . '</mergeCells>';
+			unset($sMerge);unset($sMerge);
 		}
 
 		$this->aSheetData[$oSheet->getIdentifier()] .= '</worksheet>';
@@ -547,53 +610,64 @@ class Excel extends AbstractWriter {
 		$aFonts = array();
 		$aFills = array(
 			'none' => '<fill><patternFill patternType="none"/></fill>',
-			'grey125' => '<fill><patternFill patternType="gray125"/></fill>',
+			'gray125' => '<fill><patternFill patternType="gray125"/></fill>',
 		);
 		$aBorders = array(
 			'<border/>' => 0,
 		);
-		$aStyles = array('<xf fontId="0" fillId="0" borderId="0" shrinkToFit="true" wrapText="true"/>');
+		$aStyles = array(
+			'<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" shrinkToFit="true" wrapText="true"/>',
+		);
 
 
 		$getFontName = function(Style $oStyle) {
 			return $oStyle->getFont()
-			. '_' . $oStyle->getFontSize()
-			. '_' . $oStyle->getColor()
-			. ((true == $oStyle->isBold()) ? 'bold' : '')
-			. ((true == $oStyle->isItalic()) ? 'italic' : '')
-				;
+				. '_' . $oStyle->getFontSize()
+				. '_' . $oStyle->getColor()
+				. ((true == $oStyle->isBold()) ? '_bold' : '')
+				. ((true == $oStyle->isItalic()) ? '_italic' : '')
+				. ((true == $oStyle->hasUnderline()) ? '_underline' : '')
+			;
 		};
 
 		$addFont = function(Style $oStyle) use(&$aFonts, $getFontName) {
 			$sFontName = $getFontName($oStyle);
-			$aFonts[$sFontName] = '<font>';
 
-			if ($oStyle->hasFontSize()) {
-				$aFonts[$sFontName] .= '<sz val="' . $oStyle->getFontSize() . '"/>';
-			}
+			if (!array_key_exists($sFontName, $aFonts)) {
 
-			if ($oStyle->hasFont()) {
-				$aFonts[$sFontName] .= '<name val="' . $oStyle->getFont() . '"/>';
+				$aFonts[$sFontName] = '<font>';
 
-			}
+				if ($oStyle->hasFontSize()) {
+					$aFonts[$sFontName] .= '<sz val="' . $oStyle->getFontSize() . '"/>';
+				}
 
-			if ($oStyle->hasColor()) {
-				$aFonts[$sFontName] .= '<color rgb="FF' . $oStyle->getColor() . '"/>';
-			}
+				if ($oStyle->hasFont()) {
+					$aFonts[$sFontName] .= '<name val="' . $oStyle->getFont() . '"/>';
 
-			if ($oStyle->isBold()) {
-				$aFonts[$sFontName] .= '<b/>';
-			}
+				}
 
-			if ($oStyle->isItalic()) {
-				$aFonts[$sFontName] .= '<i/>';
-			}
+				if ($oStyle->hasColor()) {
+					$aFonts[$sFontName] .= '<color rgb="FF' . $oStyle->getColor() . '"/>';
+				}
 
-			$aFonts[$sFontName] .= '</font>';
+				if ($oStyle->isBold()) {
+					$aFonts[$sFontName] .= '<b/>';
+				}
 
-			if ('<font></font>' == $aFonts[$sFontName]) {
-				unset($aFonts[$sFontName]);
-				return 0;
+				if ($oStyle->isItalic()) {
+					$aFonts[$sFontName] .= '<i/>';
+				}
+
+				if ($oStyle->hasUnderline()) {
+					$aFonts[$sFontName] .= '<u/>';
+				}
+
+				$aFonts[$sFontName] .= '</font>';
+
+				if ('<font></font>' == $aFonts[$sFontName]) {
+					unset($aFonts[$sFontName]);
+					return 0;
+				}
 			}
 
 			return array_search($sFontName, array_keys($aFonts));
@@ -706,6 +780,26 @@ class Excel extends AbstractWriter {
 		return $sXml . '</sst>';
 	}
 
+	/**
+	 * generate worksheet relations, especially for hyperlinks at the moment.
+	 *
+	 * @param Sheet $oSheet
+	 *
+	 * @return string
+	 */
+	protected function worksheetRelationsXml(Sheet &$oSheet) {
+
+		$sXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+			  . '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+		;
+		foreach($this->aHyperlinks[$oSheet->getIdentifier()] as $sLink => $iNum) {
+			$sXml .= '<Relationship Id="rId' . $iNum . '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="' . $sLink . '" TargetMode="External"/>';
+		}
+
+
+		return $sXml . '</Relationships>';
+	}
+
 #pragma mark - abstract methods to save and create documents
 
 	/**
@@ -721,13 +815,6 @@ class Excel extends AbstractWriter {
 
 		$this->checkNumberOfSheetsInWorkbook();
 
-		$sSheetXml = $this->createSheetXml();
-
-		foreach($this->aSheets as $iSheet => $oSheet) {
-
-			/** @var Sheet $oSheet */
-			$this->createSheetDataXml($oSheet, $iSheet);
-		}
 
 		// create zip file
 		$oZip  = new \ZipArchive;
@@ -735,6 +822,18 @@ class Excel extends AbstractWriter {
 
 		if (true !== $oRes) {
 			throw new \LogicException('Excellence could not create Excel workbook.');
+		}
+
+		$sSheetXml = $this->createSheetXml();
+
+		foreach($this->aSheets as $iSheet => $oSheet) {
+
+			/** @var Sheet $oSheet */
+			$this->createSheetDataXml($oSheet, $iSheet);
+
+			if ($this->hasHyperlinks($oSheet)) {
+				$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'worksheets' . DIRECTORY_SEPARATOR . '_rels' . DIRECTORY_SEPARATOR . $oSheet->getIdentifier() . '.xml.rels', $this->worksheetRelationsXml($oSheet));
+			}
 		}
 
 		// add relations
@@ -767,6 +866,7 @@ class Excel extends AbstractWriter {
 		foreach($this->aSheetData as $sSheetId => $sDom) {
 			$oZip->addFromString('xl' . DIRECTORY_SEPARATOR . 'worksheets' . DIRECTORY_SEPARATOR . $sSheetId . '.xml', $sDom);
 		}
+
 
 		$oZip->close();
 

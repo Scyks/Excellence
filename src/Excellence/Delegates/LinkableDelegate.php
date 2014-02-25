@@ -1,7 +1,7 @@
 <?php
 /**
- * @author		  Ronald Marske <r.marske@secu-ring.de>
- * @filesource	  Test/TestCase.php
+ * @author        Ronald Marske <scyks@ceow.de>
+ * @filesource    src/Excellence/Delegates/MergeableDelegate.php
  *
  * @copyright     Copyright (c) 2013 Ronald Marske, All rights reserved.
  *
@@ -35,80 +35,38 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Test;
+namespace Excellence\Delegates;
 
 use Excellence\Workbook;
-use Test\Excellence\Stub\DataSource;
-use Excellence\Delegates\WorkbookDelegate;
-use Test\Excellence\Stub\MergeableDataSource;
-use Test\Excellence\Stub\StylableDataSource;
-use Test\Excellence\Stub\LinkableDataSource;
+use Excellence\Sheet;
 
-class TestCase extends \PHPUnit_Framework_TestCase {
-
-#pragma mark - creations
+interface LinkableDelegate {
 
 	/**
-	 * @param string $sIdentifier
-	 * @param WorkbookDelegate $oDelegate
+	 * this method will return true when a specific column in a specific
+	 * row has an hyperlink. If this column has any, the method getLinkForColumnAndRow
+	 * will called.
 	 *
-	 * @return Workbook
-	 */
-	public function makeWorkbook($sIdentifier = 'workbook', WorkbookDelegate $oDelegate = null) {
-
-		if (null == $oDelegate) {
-			$oDelegate  = $this->makeDelegate();
-		}
-
-		return new Workbook($sIdentifier, $oDelegate);
-	}
-
-	/**
-	 * @return DataSource
-	 */
-	public function makeDelegate() {
-		return new DataSource();
-	}
-
-	/**
-	 * @return MergableDataSource
-	 */
-	public function makeMergeDelegate() {
-		return new MergeableDataSource();
-	}
-
-	/**
-	 * @return StylableDataSource
-	 */
-	public function makeStylableDelegate() {
-		return new StylableDataSource();
-	}
-
-	/**
-	 * @return LinkableDataSource
-	 */
-	public function makeLinkableDelegate() {
-		return new LinkableDataSource();
-	}
-
-#pragma mark - dataProvider
-
-	/**
-	 * data provider that returns values that don't match or could
-	 * type casted to positive integer values.
+	 * @param Workbook $oWorkbook
+	 * @param Sheet    $oSheet
+	 * @param int      $iRow
+	 * @param int      $iColumn
 	 *
-	 * @return array
+	 * @return boolean
 	 */
-	public function dataProviderInvalidValuesForPositiveIntegers() {
-		return array(
-			array(0),
-			array(-2),
-			array('0'),
-			array('0.9'),
-			array('-1'),
-			array('test'),
-			array(array()),
-			array(false),
-		);
-	}
-} 
+	public function hasLinkForColumnAndRow(Workbook $oWorkbook, Sheet $oSheet, $iRow, $iColumn);
+
+	/**
+	 * this method will return a hyperlink (url) for a specific column in a specific
+	 * row. This method is only been called, when getLinkForColumnAndRow returns
+	 * true.
+	 *
+	 * @param Workbook $oWorkbook
+	 * @param Sheet    $oSheet
+	 * @param int      $iRow
+	 * @param int      $iColumn
+	 *
+	 * @return string
+	 */
+	public function getLinkForColumnAndRow(Workbook $oWorkbook, Sheet $oSheet, $iRow, $iColumn);
+}

@@ -106,6 +106,12 @@ class Style {
 	private $bItalic = false;
 
 	/**
+	 * underline
+	 * @var bool
+	 */
+	private $bUnderline = false;
+
+	/**
 	 * foreground color
 	 *
 	 * @var null|string
@@ -273,6 +279,26 @@ class Style {
 	 */
 	public function isItalic() {
 		return $this->bItalic;
+	}
+
+	/**
+	 * toggle function for marking font as underlined
+	 * @param bool $bUnderline
+	 * @return Style
+	 */
+	public function setUnderline($bUnderline = true) {
+		$this->bUnderline = (bool) $bUnderline;
+
+		return $this;
+	}
+
+	/**
+	 * check if font is marked as underlined
+	 *
+	 * @return bool
+	 */
+	public function hasUnderline() {
+		return $this->bUnderline;
 	}
 	
 #pragma mark - color handling

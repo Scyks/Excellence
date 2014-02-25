@@ -1,7 +1,7 @@
 <?php
 /**
  * @author        Ronald Marske <scyks@ceow.de>
- * @filesource    Test/Excellence/Stub/StylableDataSource.php
+ * @filesource    DataSource.php
  *
  * @copyright     Copyright (c) 2013 Ronald Marske, All rights reserved.
  *
@@ -39,16 +39,15 @@ namespace Test\Excellence\Stub;
 
 use \Excellence\Delegates\WorkbookDelegate;
 use \Excellence\Delegates\DataDelegate;
-use \Excellence\Delegates\StylableDelegate;
+use \Excellence\Delegates\LinkableDelegate;
 use \Excellence\Workbook;
 use \Excellence\Sheet;
-use \Excellence\Style;
 
 /**
  * Stub Data Source for Tests
  * @package Test\Excellence\Stub
  */
-class StylableDataSource implements WorkbookDelegate, DataDelegate, StylableDelegate {
+class LinkableDataSource implements WorkbookDelegate, DataDelegate, LinkableDelegate {
 
 	/**
 	 * sheets
@@ -61,20 +60,6 @@ class StylableDataSource implements WorkbookDelegate, DataDelegate, StylableDele
 	 * @var array
 	 */
 	protected $aData = array();
-
-	/**
-	 * @var Style
-	 */
-	private $oStyle = null;
-	/**
-	 * @var Style
-	 */
-	private $oStyle2 = null;
-
-	/**
-	 * @var Style
-	 */
-	private $oHeader = null;
 
 	/**
 	 * construction - load data
@@ -100,35 +85,6 @@ class StylableDataSource implements WorkbookDelegate, DataDelegate, StylableDele
 
 		$this->aData['sheet2'] = $this->aData['sheet1'];
 
-		$this->oStyle = new Style();
-		$this->oStyle
-			->setBackgroundColor('FCFAE4')
-			->setHeight(30)
-		;
-
-		$this->oStyle2 = new Style();
-		$this->oStyle2
-			->setBackgroundColor('FBF6BE')
-			->setBorder(Style::BORDER_THIN, Style::BORDER_ALIGN_ALL, '333333')
-			->setVerticalAlignment(Style::ALIGN_CENTER)
-			->setHorizontalAlignment(Style::ALIGN_CENTER)
-			->setHeight(30)
-			->setBold(true)
-			->setItalic(true)
-			->setUnderline(true)
-		;
-
-		$this->oHeader = new Style();
-		$this->oHeader
-			->setBold()
-			->setColor('000000')
-			->setBorder(Style::BORDER_THIN, Style::BORDER_ALIGN_ALL, '0949E9')
-			->setHorizontalAlignment(Style::ALIGN_CENTER)
-			->setVerticalAlignment(Style::ALIGN_CENTER)
-			->setHeight(50)
-			->setFont('Arial')
-			->setFontSize(20)
-		;
 	}
 
 #pragma mark - WorkbookDelegate implementation
@@ -218,50 +174,35 @@ class StylableDataSource implements WorkbookDelegate, DataDelegate, StylableDele
 	}
 
 	/**
-	 * returns a Style definition that will be used as default for all cells.
+	 * this method will return true when a specific column in a specific
+	 * row has an hyperlink. If this column has any, the method getLinkForColumnAndRow
+	 * will called.
 	 *
 	 * @param Workbook $oWorkbook
 	 * @param Sheet    $oSheet
+	 * @param int      $iRow
+	 * @param int      $iColumn
 	 *
-	 * @return Style
+	 * @return boolean
 	 */
-	public function getStandardStyle(Workbook $oWorkbook, Sheet $oSheet) {
-		$oStyle = new Style();
-		$oStyle
-			->setFont('Verdana')
-			->setFontSize(12)
-			->setColor('000000')
-		;
-
-		return $oStyle;
+	public function hasLinkForColumnAndRow(Workbook $oWorkbook, Sheet $oSheet, $iRow, $iColumn) {
+		return (0 == $iColumn);
 	}
 
 	/**
-	 * returns Style definition for a specific cell by given identifier
+	 * this method will return a hyperlink (url) for a specific column in a specific
+	 * row. This method is only been called, when getLinkForColumnAndRow returns
+	 * true.
 	 *
 	 * @param Workbook $oWorkbook
 	 * @param Sheet    $oSheet
-	 * @param int      $iColumn
 	 * @param int      $iRow
+	 * @param int      $iColumn
 	 *
-	 * @return Style
+	 * @return string
 	 */
-	public function getStyleForColumnAndRow(Workbook $oWorkbook, Sheet $oSheet, $iColumn, $iRow) {
-		if (0 == $iRow) {
-			if ($iColumn != 0 && $iColumn != 4) {
-				$this->oHeader->setWidth(5);
-			} else {
-				$this->oHeader->setWidth(20);
-			}
-			return $this->oHeader;
-		}
-
-
-		if ($iRow %2 == 1) {
-			return $this->oStyle;
-		} else {
-			return $this->oStyle2;
-		}
+	public function getLinkForColumnAndRow(Workbook $oWorkbook, Sheet $oSheet, $iRow, $iColumn) {
+		return 'http://google.de';
 	}
 
 
