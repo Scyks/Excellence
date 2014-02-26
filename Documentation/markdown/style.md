@@ -19,28 +19,139 @@ $oStyle
 
 ## Function reference
 
-* Sheet **__construct** ( string *$sIdentifier*, string *$sName = null* )
+* string **getId** (  )
 
-  Will create a sheet instance with an identifier. You can also set a name
-  for this sheet that will displayed in sheet tab bar in Excel.
+  this method returns a string containing an id, by given params
 
-* string **getIdentifier** ( *void* )
+* Style **setFont** ( *string* )
 
-  Return sheet identifier to identify a workbook. This should be unique
-  in an application.
+  defines a font family, font size and color
 
-* bool **hasName** ( *void* )
+* bool **hasFont** (  )
 
-  Return true if this sheet has a name, otherise this method return false.
+  checks if a font is defined
 
-* string **getName** ( *void* )
+* string **getFont** (  )
 
-  Return defined sheet name
+  return font family
 
-* Sheet **setFirstRowAsFixed** ( *bool* )
+* Style **setFontSize** ( *integer* )
 
-  Will mark the first line as fixed, that i can't be scrolled.
+  defines a font size - will casted to float value
 
-* bool **isFirstRowFixed** ( )
+* bool **hasFontSize** ( )
 
-  Check method if first row is marked as fixed
+  checks if a font size is defined
+
+* float **getFontSize** ( )
+
+  return defined font size
+
+* Style **setBold** ( *bool* )
+
+  toggle function for marking font as bold
+
+* bool **isBold** (  )
+
+  check if font is marked as bold
+
+* Style **setItalic** ( *bool* )
+
+  toggle function for marking font as italic
+
+* bool **isItalic** (  )
+
+  check if font is marked as bold
+
+* Style **setUnderline** ( *bool* )
+
+  toggle function for marking font as underlined
+
+* bool **hasUnderline** (  )
+
+  check if font is marked as underlined
+
+* Style **setColor** ( *string* )
+
+  defines a hexadecimal color code
+
+* bool **hasColor** (  )
+
+  checks if a color is defined
+
+* string **getColor** (  )
+
+  return hexadecimal color code
+
+* Style **setBackgroundColor** ( *string* )
+
+  defines a hexadecimal background background color code
+
+* bool **hasBackgroundColor** (  )
+
+  checks if a font is defined
+
+* string **getBackgroundColor** (  )
+
+  return hexadecimal background background color code
+
+* Style **setHorizontalAlignment** ( *string* )
+
+  defines horizontal alignment
+
+* bool **hasHorizontalAlignment** (  )
+
+  checks if a horizontal alignment is defined
+
+* string **getHorizontalAlignment** (  )
+
+  returns horizontal alignment
+
+* Style **setVerticalAlignment** ( *string* )
+
+  defines vertical alignment
+
+* bool **hasVerticalAlignment** (  )
+
+  checks if a vertical alignment is defined
+
+* string **getVerticalAlignment** (  )
+
+  returns vertical alignment
+
+* Style **setBorder** ( *string*, *integer*, *string* )
+
+  define a border for cell. Border styles are stored by alignment, because alignment have to be unique.
+
+* bool **hasBorder** (  )
+
+  check if border is defined
+
+* array **getBorder** (  )
+
+  return border definition
+
+* Style **setWidth** ( *float* )
+
+  defines a width for a cell
+
+* bool **hasWidth** (  )
+
+  checks if a width is defined
+
+* float **getWidth** (  )
+
+  return width for a cell
+
+* Style **setHeight** ( *float* )
+
+  defines a height for a cell
+
+* bool **hasHeight** (  )
+
+  checks if a height is defined
+
+* float **getHeight** (  )
+
+  return height for a cell
+
