@@ -27,10 +27,10 @@ $oWorkbook = new \Excellence\Workbook('identifier', $oWorkBookDelegate);
   Will return a coordinate string in Excel format. If *$iRow* is null, only the letter
   for a specific column will be returned. (A1)
 
-* Workbook **create** ( *void* )
+* Style **getStandardStyles** ()
 
-  This method create data structure for Excel document.
+  returns standard style information
 
-* Workbook **save** ( string *$sFilename*)
+* Workbook **getStandardStyles** (Style *$oStyle*)
 
-  will save an Excel document to file by given filename.
+  will set standard style information to wrokbook class

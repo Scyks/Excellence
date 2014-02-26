@@ -1,9 +1,20 @@
-# Sheet Class
+# Style Class
 
-A sheet object will set an identifier and a name for a sheet, that will displayed in Excel's Sheet bar.
+A style object allows to modify most used style information in an excel sheet as font, font size,
+bold, italic, underline, color, background color, vertical and horizontal alignments and borders.
 
 ```php
-$oSheet = new \Excellence\Sheet('identifier', 'name of this sheet');
+$oStyle = new \Excellence\Style();
+$oStyle
+	->setBackgroundColor('FCFAE4')
+	->setFont('Verdana')
+	->setFontSize(12)
+	->setColor('000000')
+	->setBorder(Style::BORDER_THIN, Style::BORDER_ALIGN_ALL, '333333')
+	->setVerticalAlignment(Style::ALIGN_CENTER)
+	->setHorizontalAlignment(Style::ALIGN_CENTER)
+	->setHeight(30)
+;
 ```
 
 ## Function reference
