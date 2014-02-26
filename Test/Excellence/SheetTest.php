@@ -37,8 +37,13 @@
 
 namespace Test\Excellence;
 use Excellence\Sheet;
-
-class SheetTest extends \PHPUnit_Framework_TestCase {
+use Test\TestCase;
+/**
+ * Class SheetTest
+ * @group Sheet
+ * @package Test\Excellence
+ */
+class SheetTest extends TestCase {
 
 #pragma mark - creations
 
@@ -71,7 +76,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 * @dataProvider dataProviderIllegalIds
 	 * @expectedException \InvalidArgumentException
 	 * @expectedExceptionMessage Sheet identifier does only contain following signs (a-z, 0-9, _, -).
@@ -83,7 +87,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function __construct_provideStringIdentifier_identifierStored() {
 
@@ -93,7 +96,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function __construct_nullAsName_nameEqualsNull() {
 
@@ -103,7 +105,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function __construct_emptyStringAsName_nameEqualsNull() {
 
@@ -113,7 +114,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function __construct_stringAsName_nameEqualsFoobar() {
 
@@ -126,7 +126,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function getIdentifier_modifiedIdentifierVariable_returnsFoobar() {
 
@@ -143,7 +142,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function getIdentifier_constructionIdentifier_returnsSheet() {
 		$oSheet = $this->makeSheet();
@@ -154,7 +152,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function getName_noNameProvided_returnsNull() {
 
@@ -164,7 +161,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function getName_modifiedIdentifierVariable_returnsFoobar() {
 
@@ -181,7 +177,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function getName_constructionIdentifier_returnsSheet() {
 		$oSheet = $this->makeSheet('scheet', 'Foobar');
@@ -193,7 +188,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function hasName_noNameProvided_returnsFalse() {
 
@@ -203,7 +197,6 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function hasName_modifiedIdentifierVariable_returnsFoobar() {
 
@@ -220,11 +213,110 @@ class SheetTest extends \PHPUnit_Framework_TestCase {
 
 	/**
 	 * @test
-	 * @group Sheet
 	 */
 	public function hasName_constructionIdentifier_returnsSheet() {
 		$oSheet = $this->makeSheet('scheet', 'Foobar');
 		$this->assertTrue($oSheet->hasName());
+	}
+
+#pragma mark - markFirstRowAsFixed
+
+	/**
+	 * @test
+	 */
+	public function firstRowAsFixed_defaultValue_storedAsFalse() {
+		$oSheet = $this->makeSheet();
+
+		$this->assertAttributeEquals(false, 'bFirstRowFixed', $oSheet);
+	}
+
+	/**
+	 * @test
+	 */
+	public function setFirstRowAsFixed_setToFalse_storedAsFalse() {
+		$oSheet = $this->makeSheet();
+
+		$oSheet->setFirstRowAsFixed(false);
+
+		$this->assertAttributeEquals(false, 'bFirstRowFixed', $oSheet);
+	}
+
+	/**
+	 * @test
+	 * @dataProvider dataProviderInvalidBoolean
+	 * @expectedException \InvalidArgumentException
+	 * @expectedExceptionMessage Please provide a boolean value to "Excellence\Sheet::setFirstRowAsFixed".
+	 */
+	public function setFirstRowAsFixed_noBoolean_throwException($value) {
+		$oSheet = $this->makeSheet();
+
+		$oSheet->setFirstRowAsFixed($value);
+	}
+
+	/**
+	 * @test
+	 */
+	public function setFirstRowAsFixed_setToTrue_storedAsTrue() {
+		$oSheet = $this->makeSheet();
+
+		$oSheet->setFirstRowAsFixed(true);
+
+		$this->assertAttributeEquals(true, 'bFirstRowFixed', $oSheet);
+	}
+
+	/**
+	 * @test
+	 */
+	public function setFirstRowAsFixed_checkFluentInterface_returnSelf() {
+		$oSheet = $this->makeSheet();
+
+		$this->assertSame($oSheet, $oSheet->setFirstRowAsFixed(true));
+	}
+
+#pragma mark - isFirstRowFixed
+
+	/**
+	 * @test
+	 */
+	public function isFirstRowFixed_defaultValue_returnsFalse() {
+		$oSheet = $this->makeSheet();
+
+		$this->assertFalse($oSheet->isFirstRowFixed());
+	}
+
+	/**
+	 * @test
+	 */
+	public function isFirstRowFixed_settedToFalse_returnsFalse() {
+		$oSheet = $this->makeSheet();
+		$oSheet->setFirstRowAsFixed(false);
+
+		$this->assertFalse($oSheet->isFirstRowFixed());
+	}
+
+	/**
+	 * @test
+	 */
+	public function isFirstRowFixed_settedToTrue_returnsTrue() {
+		$oSheet = $this->makeSheet();
+		$oSheet->setFirstRowAsFixed(true);
+
+		$this->assertTrue($oSheet->isFirstRowFixed());
+	}
+
+	/**
+	 * @test
+	 */
+	public function isFirstRowFixed_checkIfReturnValueIsTypeCastedToBool_returnsTrue() {
+		$oSheet = $this->makeSheet();
+
+		$oReflectionClass = new \ReflectionClass($oSheet);
+
+		$oProperty = $oReflectionClass->getProperty('bFirstRowFixed');
+		$oProperty->setAccessible(true);
+		$oProperty->setValue($oSheet, 'foobar');
+
+		$this->assertTrue($oSheet->isFirstRowFixed());
 	}
 
 }

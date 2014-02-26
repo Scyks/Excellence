@@ -282,8 +282,18 @@ class Excel extends AbstractWriter {
 			. '<worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
 			// formally at this position is a dimension tag, but Excel don't need it <dimension ref="A1:B2"/>
 			. '<sheetViews>'
-			. '<sheetView tabSelected="1" workbookViewId="0"/>'
-			. '</sheetViews>'
+		;
+
+		if ($oSheet->isFirstRowFixed()) {
+			$this->aSheetData[$oSheet->getIdentifier()] .= '<sheetView tabSelected="1" workbookViewId="0">'
+				. '<pane ySplit="1" topLeftCell="A2" state="frozen"/>'
+				. '</sheetView>'
+			;
+		} else {
+			$this->aSheetData[$oSheet->getIdentifier()] .= '<sheetView tabSelected="1" workbookViewId="0"/>';
+		}
+
+		$this->aSheetData[$oSheet->getIdentifier()] .= '</sheetViews>'
 			. '%s'
 			. '<sheetData>'
 		;

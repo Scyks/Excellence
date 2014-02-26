@@ -67,6 +67,8 @@ class DataSource implements WorkbookDelegate, DataDelegate {
 		$this->aSheets[] = new Sheet('sheet1', 'Sheet 1');
 		$this->aSheets[] = new Sheet('sheet2');
 
+		$this->aSheets[0]->setFirstRowAsFixed(true);
+
 		$this->aData['sheet1'][0][] = 'row1col1';
 		$this->aData['sheet1'][0][] = 42;
 		$this->aData['sheet1'][0][] = 42.34;

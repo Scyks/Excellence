@@ -59,6 +59,11 @@ class Sheet {
 	 */
 	private $sName;
 
+	/**
+	 * flag to mark first row as fixed
+	 * @var bool
+	 */
+	private $bFirstRowFixed = false;
 
 #pragma mark - construction
 
@@ -117,4 +122,32 @@ class Sheet {
 		return (0 < strlen($this->sName));
 	}
 
+#pragma mark - mark first row as fixed
+
+	/**
+	 * this method will mark the first line as fixed, that i can't be
+	 * scrolled.
+	 *
+	 * @param bool $bFixed
+	 * @return Sheet
+	 * @throws \InvalidArgumentException
+	 */
+	public function setFirstRowAsFixed($bFixed) {
+
+		if (!is_bool($bFixed)) {
+			throw new \InvalidArgumentException(sprintf('Please provide a boolean value to "%s".', __METHOD__));
+		}
+
+		$this->bFirstRowFixed = $bFixed;
+
+		return $this;
+	}
+
+	/**
+	 * Check method if first row is marked as fixed
+	 * @return bool
+	 */
+	public function isFirstRowFixed() {
+		return (bool) $this->bFirstRowFixed;
+	}
 }

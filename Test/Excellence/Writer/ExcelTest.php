@@ -397,7 +397,61 @@ class ExcelTest extends TestCase {
 	/**
 	 * @test
 	 */
-	public function createSheetDataXml_createSheetDataXml_ScheetDataXmlCreated() {
+	public function createSheetDataXml_sheet1CreateSheetDataXml_ScheetDataXmlCreated() {
+		$oWorkbook = $this->makeWorkbook();
+
+		$sCompareXml = '<?xml version="1.0" encoding="UTF-8"?>'
+			. '<worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac" mc:Ignorable="x14ac">'
+			. '<sheetViews>'
+			. '<sheetView tabSelected="1" workbookViewId="0">'
+			. '<pane ySplit="1" topLeftCell="A2" state="frozen"/>'
+			. '</sheetView>'
+			. '</sheetViews>'
+			. '<sheetData>'
+			. '<row r="1">'
+			. '<c r="A1" t="s"><v>0</v></c>'
+			. '<c r="B1" t="n"><v>42</v></c>'
+			. '<c r="C1" t="n"><v>42.34</v></c>'
+			. '<c r="D1" t="b"><v>1</v></c>'
+			. '</row>'
+			. '<row r="2">'
+			. '<c r="A2" t="s"><v>1</v></c>'
+			. '<c r="B2" t="n"><v>42</v></c>'
+			. '<c r="C2" t="n"><v>42.34</v></c>'
+			. '<c r="D2" t="b"><v>0</v></c>'
+			. '</row>'
+			. '<row r="3">'
+			. '<c r="A3" t="s"><v>2</v></c>'
+			. '<c r="B3" t="n"><v>42</v></c>'
+			. '<c r="C3" t="n"><v>42.34</v></c>'
+			. '<c r="D3" t="b"><v>1</v></c>'
+			. '</row>'
+			. '<row r="4">'
+			. '<c r="B4"><f>SUM(B1:B3)</f></c>'
+			. '<c r="C4"><f>SUM(C1:C3)</f></c>'
+			. '</row>'
+			. '</sheetData>'
+			. '</worksheet>'
+		;
+
+
+		$oWriter = $this->createWriter($oWorkbook);
+		$oWriter->createSheetDataXml($oWorkbook->getDelegate()->getSheetForWorkBook($oWorkbook, 0), 0);
+		$oWriter->createSheetDataXml($oWorkbook->getDelegate()->getSheetForWorkBook($oWorkbook, 1), 1);
+
+		$oReflection = new \ReflectionClass($oWriter);
+		$oSheetData = $oReflection->getProperty('aSheetData');
+		$oSheetData->setAccessible(true);
+		$aSheets = $oSheetData->getValue($oWriter);
+
+		$this->assertXmlStringEqualsXmlString($aSheets['sheet1'], $sCompareXml);
+	}
+
+
+	/**
+	 * @test
+	 */
+	public function createSheetDataXml_sheet2CreateSheetDataXml_ScheetDataXmlCreated() {
 		$oWorkbook = $this->makeWorkbook();
 
 		$sCompareXml = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -442,7 +496,6 @@ class ExcelTest extends TestCase {
 		$oSheetData->setAccessible(true);
 		$aSheets = $oSheetData->getValue($oWriter);
 
-		$this->assertXmlStringEqualsXmlString($aSheets['sheet1'], $sCompareXml);
 		$this->assertXmlStringEqualsXmlString($aSheets['sheet2'], $sCompareXml);
 	}
 

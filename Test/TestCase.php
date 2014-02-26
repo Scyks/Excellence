@@ -111,4 +111,25 @@ class TestCase extends \PHPUnit_Framework_TestCase {
 			array(false),
 		);
 	}
+
+	/**
+	 * data provider that returns values that don't be boolean values
+	 *
+	 * @return array
+	 */
+	public function dataProviderInvalidBoolean() {
+		return array(
+			array(0),
+			array(-2),
+			array(-2.9),
+			array('0'),
+			array('0.9'),
+			array(0.9),
+			array('-1'),
+			array('test'),
+			array(array()),
+		);
+	}
+
+
 } 
