@@ -1,7 +1,7 @@
 <?php
 /**
  * @author		  Ronald Marske <r.marske@secu-ring.de>
- * @filesource    Test/Excellence/Writer/AbstractWriterTest.php
+ * @filesource    Test/Excellence/Writer/ExcelTest.php
  *
  * @copyright     Copyright (c) 2013 Ronald Marske, All rights reserved.
  *

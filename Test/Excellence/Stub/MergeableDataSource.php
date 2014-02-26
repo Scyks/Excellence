@@ -1,7 +1,7 @@
 <?php
 /**
  * @author        Ronald Marske <scyks@ceow.de>
- * @filesource    DataSource.php
+ * @filesource    Test/Excellence/Stub/MergeableDataSource.php
  *
  * @copyright     Copyright (c) 2013 Ronald Marske, All rights reserved.
  *
