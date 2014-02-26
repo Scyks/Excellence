@@ -52,7 +52,7 @@ abstract class AbstractWriter {
 	private $oWorkbook = null;
 
 	/**
-	 * Construction of a document writer for Excellence
+	 * Construction of excel document writer for Excellence
 	 * @param Workbook $oWorkbook
 	 */
 	public function __construct(Workbook $oWorkbook) {

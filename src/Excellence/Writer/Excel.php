@@ -176,7 +176,7 @@ class Excel extends AbstractWriter {
 	 * get number of sheets from workbook and stores it for performance
 	 * @return int
 	 */
-	public function getNumberOfSheets() {
+	protected function getNumberOfSheets() {
 
 		if (null == $this->iSheets)
 			$this->iSheets = (int) $this->getDelegate()->numberOfSheetsInWorkbook($this->getWorkbook());

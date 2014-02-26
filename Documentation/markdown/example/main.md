@@ -1,5 +1,5 @@
 
-# Example
+# Standard Example
 
 The following example is a simple workbook that creates 2 sheets. The Class `MyWorkbook` will
 handle sheet information and data source for second sheet. For the first sheet there is
@@ -10,6 +10,7 @@ how you can use it.
 ```php
 use Excellence\Sheet;
 use \Excellence\Workbook;
+use \Excellence\Writer\Excel;
 use \Excellence\Delegates\WorkbookDelegate;
 use \Excellence\Delegates\DataDelegate;
 
@@ -42,7 +43,7 @@ class MyWorkbook implements WorkbookDelegate, DataDelegate {
 		return $this->aSheets[$iSheetIndex];
 	}
 
-	/** demonstarte usage of external and internal data source */
+	/** demonstrate usage of external and internal data source */
 	public function dataSourceForWorkbookAndSheet(Workbook $oWorkbook, Sheet $oSheet) {
 		if ('sheet1' == $oSheet->getIdentifier()) {
 			return new MyDataSource();
@@ -106,9 +107,9 @@ class myDataSource implements DataDelegate {
 }
 
 // create workbook and save it
-$oWorkbook  =new Workbook('myWorkbook', new MyWorkbook());
-$oWorkbook
-	->create()
-	->save('foobar.xlsx')
-;
+$oWorkbook = new Workbook('myWorkbook', new MyWorkbook());
+$oWriter = new Excel($oWorkbook);
+
+$oWriter->saveToFile('test.xlsx');
+
 ```
