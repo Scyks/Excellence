@@ -33,7 +33,7 @@ class MyWorkbook implements WorkbookDelegate, DataDelegate, StylableDelegate {
 			$this->aData['sheet1'][$iRow][0] = 'Hello world';
 			$this->aData['sheet1'][$iRow][1] = 22;
 			$this->aData['sheet1'][$iRow][2] = 0.9;
-			$this->aData['sheet1'][$iRow][3] = '=SUM(B' . ($iRow+1) . ':'C' . ($iRow+1) . ')';
+			$this->aData['sheet1'][$iRow][3] = '=SUM(B' . ($iRow+1) . ':C' . ($iRow+1) . ')';
 		}
 
 		$this->oStyle = new Style();

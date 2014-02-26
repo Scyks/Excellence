@@ -26,5 +26,5 @@ Excellence is providing interfaces that you have to implement. There are `WorkBo
 
 * [Example implementation](example/main.md)
 * [Cell merging](example/cell-merging.md)
-* [styling implementation](example/styling.md)
-* [linking implementation](example/linking.md)
+* [Styling implementation](example/styling.md)
+* [Linking implementation](example/linking.md)
