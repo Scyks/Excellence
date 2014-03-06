@@ -273,7 +273,7 @@ class Excel extends AbstractWriter {
 
 			// if style is instance of Style, set it
 			if ($oStandardStyle instanceof Style) {
-				$this->getWorkbook()->getStandardStyles($oStandardStyle);
+				$this->getWorkbook()->setStandardStyles($oStandardStyle);
 			}
 		}
 
@@ -286,7 +286,7 @@ class Excel extends AbstractWriter {
 
 		if ($oSheet->isFirstRowFixed()) {
 			$this->aSheetData[$oSheet->getIdentifier()] .= '<sheetView tabSelected="1" workbookViewId="0">'
-				. '<pane ySplit="1" topLeftCell="A2" state="frozen"/>'
+				. '<pane ySplit="' . $oSheet->getRowFixPosition() . '" topLeftCell="A'. ($oSheet->getRowFixPosition() + 1) . '" state="frozen"/>'
 				. '</sheetView>'
 			;
 		} else {
@@ -301,6 +301,8 @@ class Excel extends AbstractWriter {
 		$sMerge = '';
 		$aColStyles = array();
 		$sHyperlinks = '';
+		$iMergeCount = 0;
+		$iLinkCount = 0;
 
 		// sheet loop
 		for($iRow = 0; $iRow < $iRows; $iRow++) {
@@ -322,8 +324,9 @@ class Excel extends AbstractWriter {
 				// style definition for cell
 				$sStyle = null;
 
-				// return if value is empty
-				if (null === $value) continue;
+				// set empty string when values is null - fixes background color bug
+				if (null === $value)
+					$value = "";
 
 				// value type
 				$iType = gettype($value);
@@ -346,11 +349,12 @@ class Excel extends AbstractWriter {
 						$sMergeRange = strtoupper($sMergeRange);
 
 						// check if merge range equals correct format
-						if (!preg_match('/^[A-Z]+[0-9]+:[A-Z]+[0-9]$/', $sMergeRange)) {
+						if (!preg_match('/^[A-Z]+[0-9]+:[A-Z]+[0-9]+$/', $sMergeRange)) {
 							throw new \InvalidArgumentException('MergeableDelegate::mergeByColumnAndRow have to return a merge range as string in format "A1:A2"');
 						}
 
 						$sMerge .= '<mergeCell ref="' . $sMergeRange . '"/>';
+						$iMergeCount++;
 					}
 				}
 
@@ -385,7 +389,7 @@ class Excel extends AbstractWriter {
 
 					$iLinkId = $this->addHyperlink($oSheet, $oDataSource->getLinkForColumnAndRow($this->getWorkbook(), $oSheet, $iRow, $iColumn));
 					$sHyperlinks .= '<hyperlink ref="' . $sCord . '" r:id="rId' . $iLinkId . '" />';
-
+					$iLinkCount++;
 				}
 
 				// function or formula
@@ -394,20 +398,26 @@ class Excel extends AbstractWriter {
 					// add value to column
 					$sRow .= '<c r="' . $sCord . '"' . $sStyle . '><f>' . substr($value, 1) . '</f></c>';
 
-					// string
+				// string
 				} elseif('string' == $iType) {
-					$iNum = $this->addValueToSharedStrings($value);
 
-					// add value to column
-					$sRow .= '<c r="' . $sCord . '" t="s"' . $sStyle . '><v>' . $iNum . '</v></c>';
+					if (empty($value)) {
 
-					// boolean
+						// add value to column
+						$sRow .= '<c r="' . $sCord . '" ' . $sStyle . '/>';
+					} else {
+						$iNum = $this->addValueToSharedStrings($value);
+
+						// add value to column
+						$sRow .= '<c r="' . $sCord . '" t="s"' . $sStyle . '><v>' . $iNum . '</v></c>';
+					}
+
+				// boolean
 				} elseif ('boolean' == $iType) {
 
 					// add value to column
 					$sRow .= '<c r="' . $sCord . '" t="b"' . $sStyle . '><v>' . (int) $value . '</v></c>';
-
-					// number
+				// number
 				} else {
 
 					// add value to column
@@ -433,16 +443,16 @@ class Excel extends AbstractWriter {
 
 		$this->aSheetData[$oSheet->getIdentifier()] .= '</sheetData>';
 
-		// add hyperlinks
-		if (0 < strlen($sHyperlinks)) {
-			$this->aSheetData[$oSheet->getIdentifier()] .= '<hyperlinks>' . $sHyperlinks . '</hyperlinks>';
-			unset($sHyperlinks);
-		}
-
 		// merged cells
 		if (0 < strlen($sMerge)) {
-			$this->aSheetData[$oSheet->getIdentifier()] .= '<mergeCells>' . $sMerge . '</mergeCells>';
+			$this->aSheetData[$oSheet->getIdentifier()] .= '<mergeCells count="' . $iMergeCount . '">' . $sMerge . '</mergeCells>';
 			unset($sMerge);unset($sMerge);
+		}
+
+		// add hyperlinks
+		if (0 < strlen($sHyperlinks)) {
+			$this->aSheetData[$oSheet->getIdentifier()] .= '<hyperlinks count="' . $iLinkCount . '">' . $sHyperlinks . '</hyperlinks>';
+			unset($sHyperlinks);
 		}
 
 		$this->aSheetData[$oSheet->getIdentifier()] .= '</worksheet>';
@@ -743,7 +753,7 @@ class Excel extends AbstractWriter {
 			if ($oStyle->hasHorizontalAlignment() || $oStyle->hasVerticalAlignment()) {
 				$sStyle .= '>';
 
-				$sStyle .= '<alignment horizontal="'.$oStyle->getHorizontalAlignment().'" vertical="'.$oStyle->getVerticalAlignment().'"/>';
+				$sStyle .= '<alignment horizontal="'.$oStyle->getHorizontalAlignment().'" vertical="'.$oStyle->getVerticalAlignment().'" wrapText="1"/>';
 				$sStyle .= '</xf>';
 			} else {
 				$sStyle .= '/>';

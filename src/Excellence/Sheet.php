@@ -65,6 +65,12 @@ class Sheet {
 	 */
 	private $bFirstRowFixed = false;
 
+	/**
+	 * position of row, at which row it will be fixed
+	 * @var int
+	 */
+	private $iFixRowPosition = 1;
+
 #pragma mark - construction
 
 	/**
@@ -132,15 +138,20 @@ class Sheet {
 	 * @return Sheet
 	 * @throws \InvalidArgumentException
 	 */
-	public function setFirstRowAsFixed($bFixed) {
+	public function setFirstRowAsFixed($bFixed, $iRow = 1) {
 
 		if (!is_bool($bFixed)) {
 			throw new \InvalidArgumentException(sprintf('Please provide a boolean value to "%s".', __METHOD__));
 		}
 
 		$this->bFirstRowFixed = $bFixed;
+		$this->iFixRowPosition = $iRow;
 
 		return $this;
+	}
+
+	public function getRowFixPosition() {
+		return $this->iFixRowPosition;
 	}
 
 	/**

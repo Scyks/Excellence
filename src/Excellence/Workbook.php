@@ -113,6 +113,16 @@ class Workbook {
 		return $this->oStandardStyle;
 	}
 
+	/**
+	 * returns standard style information
+	 * @return Style
+	 */
+	public function setStandardStyles(Style $oStyle) {
+		$this->oStandardStyle = $oStyle;
+
+		return $this;
+	}
+
 #pragma mark - delegation
 
 	/**
