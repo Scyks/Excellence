@@ -104,6 +104,12 @@ class Excel extends AbstractWriter {
 #pragma mark - sharedStrings
 
 	private function cleanupStrings($sString) {
+		// remove control signs
+		for($i = 28; $i <= 31; $i++) {
+			$sString = str_replace(chr($i), '', $sString);
+		}
+
+		// encode html
 		return \htmlspecialchars($sString);
 	}
 
