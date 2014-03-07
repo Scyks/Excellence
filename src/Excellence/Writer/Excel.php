@@ -105,8 +105,8 @@ class Excel extends AbstractWriter {
 
 	private function cleanupStrings($sString) {
 		// remove control signs
-		for($i = 28; $i <= 31; $i++) {
-			$sString = str_replace(chr($i), '', $sString);
+		foreach(array(00, 01, 02, 03, 04, 05, 06, 06, 07, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31) as $char) {
+			$sString = str_replace(chr($char), '', $sString);
 		}
 
 		// encode html
