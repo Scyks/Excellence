@@ -103,6 +103,10 @@ class Excel extends AbstractWriter {
 
 #pragma mark - sharedStrings
 
+	private function cleanupStrings($sString) {
+		return \htmlspecialchars($sString);
+	}
+
 	/**
 	 * add a string to shared strings and returns index of this value
 	 * @param string $value
@@ -110,6 +114,8 @@ class Excel extends AbstractWriter {
 	 * @return int
 	 */
 	protected function addValueToSharedStrings($value) {
+
+		$value = $this->cleanupStrings($value);
 
 		// check if value currently exists and return index
 		if (array_key_exists($value, $this->aSharedStrings)) {
